@@ -237,8 +237,55 @@ PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
 | 事件回调 | ✅ 可用 |
 | 截图 | ✅ 可用 |
 | 会话/端口管理 | ✅ 可用 |
+| demo 全链路（VCS→FSDB→Verdi） | ✅ 可用（`demo/sync_fifo`） |
 | 值/跳变/X-Z | ❌ 未验证 |
 | 设计追踪/schematic/source | ❌ 未验证 |
 | 无头查询（NPI/FSDB Reader） | ❌ 未开始 |
 | MCP 层 | ❌ 仅方案 |
 | Skills | ❌ 仅方案 |
+
+---
+
+## 11. demo 实测（2026-10-17）
+
+DUT / TB：`demo/rtl/sync_fifo.v` / `demo/tb/tb_sync_fifo.v`；场景见 `demo/README.md`。
+
+### 编译 + 仿真（VERIFIED）
+
+```bash
+cd demo/sim
+make clean
+make sim
+```
+
+结果：
+
+```
+[40.0 ns] OK: rd_data is X while empty (xx)
+TEST PASSED
+$finish at simulation time 240.0 ns
+```
+
+产物 `sync_fifo.fsdb` 9677 bytes。`synenv.sh` 会 source `/opt/synopsys/env.synopsys.rc`；
+VCS flags 对应 `.rc` 的 `vcscmd` alias。
+
+### Verdi + libnclt（VERIFIED）
+
+```bash
+make verdi-server PORT=11066
+# 另一 shell，经 libnclt：
+wvCreateWindow                                  -> 348634d0
+wvOpenFile -win 348634d0 .../sync_fifo.fsdb     -> path
+wvAddSignal -win 348634d0 <11 signals>          -> 1
+wvSetCursor -win 348634d0 40000                 -> 1
+wvGetFileTimeUnit -win 348634d0                 -> 1ps
+```
+
+截图：`demo/evidence/nwave.png`。
+
+### 注意
+
+- `-ssf` 不保证把 FSDB 绑到**新建**的 nWave 窗口；必须先对该窗口 `wvOpenFile`，否则
+  `wvAddSignal` 返回 0。
+- 文件时间单位是 **1ps**，40 ns 的游标值是 `40000`，不是 `40`。
+- demo 的空读 X 场景可直接作为 M3 值 / 跳变 / XZ 的回归输入。

@@ -37,32 +37,62 @@ demo/
 
 ## 运行
 
-### Verdi（项目内已验证的启动方式）
+`sim/synenv.sh` 会 source `/opt/synopsys/env.synopsys.rc`，因此 VCS/Verdi 的 PATH、
+`VCS_HOME`、`VERDI_HOME` 与 license 环境都按站点配置来。Makefile 的 flags 对应
+`.rc` 里的 `vcscmd` / `verdicmd` alias。
 
-```bash
-export VERDI_HOME=/opt/synopsys/verdi/W-2024.09-SP1
-export SNPSLMD_LICENSE_FILE=27010@127.0.0.1
-export DISPLAY=localhost:10.0
-export XAUTHORITY=$HOME/.Xauthority
-
-cd demo/sim
-make verdi                      # verdi -ssf sync_fifo.fsdb
-# 或暴露命令服务给 libnclt：
-make verdi-server PORT=11066    # verdi -serverPort 11066 -ssf sync_fifo.fsdb
-```
-
-### VCS
-
-**本项目目前没有记录 VCS 的编译/运行命令**（`md/`、`poc/` 内都没有）。`sim/Makefile`
-里的 VCS 目标是占位，参数未经本机验证：
+### 编译 + 仿真（VERIFIED 2026-10-17）
 
 ```bash
 cd demo/sim
+make clean
 make sim
 ```
 
-如果 VCS 报 `$fsdbDumpfile` 未定义，需要补 Verdi 的 PLI 选项；具体路径与参数以 faye 提供的
-f29 实际流程为准。
+实际结果：
+
+```
+[40.0 ns] OK: rd_data is X while empty (xx)
+TEST PASSED
+$finish at simulation time 240.0 ns
+```
+
+并生成 `sync_fifo.fsdb`（约 9.7 KB）。
+
+### Verdi
+
+```bash
+cd demo/sim
+make verdi                      # 打开 design + FSDB
+# 或暴露命令服务给 libnclt / Verdi MCP：
+make verdi-server PORT=11066    # verdi ... -ssf sync_fifo.fsdb -serverPort 11066
+```
+
+GUI 需要可用的 X display；Makefile 默认 `DISPLAY=localhost:10.0`、
+`XAUTHORITY=$HOME/.Xauthority`，可在环境里覆盖。
+
+### 用 libnclt 操作这个 demo（VERIFIED）
+
+```bash
+cd poc
+../demo/sim/synenv.sh ./build.sh             # 构建 cmdclient
+
+# 注意：-ssf 打开的窗口不一定是你要操作的新 nWave 窗口；
+# 先 wvCreateWindow，再对新窗口 wvOpenFile，之后才能 wvAddSignal。
+../demo/sim/synenv.sh bash -c '
+  export LD_LIBRARY_PATH="$VERDI_HOME/share/libcmd/linux64:${LD_LIBRARY_PATH:-}"
+  ./poc/cmdclient 11066 \
+    "wvGetAllWindows" \
+    "wvCreateWindow" \
+    "wvOpenFile -win <WIN> /home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb" \
+    "wvAddSignal -win <WIN> /tb_sync_fifo/clk /tb_sync_fifo/rst_n /tb_sync_fifo/wr_valid /tb_sync_fifo/wr_ready /tb_sync_fifo/wr_data /tb_sync_fifo/rd_valid /tb_sync_fifo/rd_ready /tb_sync_fifo/rd_data /tb_sync_fifo/full /tb_sync_fifo/empty /tb_sync_fifo/count" \
+    "wvSetCursor -win <WIN> 40000" \
+    "wvGetFileTimeUnit -win <WIN>"
+'
+```
+
+实测：11 个信号全部加入成功；`wvGetFileTimeUnit` 返回 **1ps**，所以 40 ns 的游标值是
+`40000`，不是 `40`。`rd_data` 在空 FIFO 阶段显示为 X。截图：`evidence/nwave.png`。
 
 ## 预期波形 landmark
 
