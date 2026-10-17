@@ -15,9 +15,9 @@
 | nWave：建窗 / 开库 / 加信号 / 游标 / 信号枚举 | ✅ VERIFIED | `01-test-progress.md` §3–4 |
 | 事件回调 / 截图 / 会话注册表 / 多会话启动 | ✅ VERIFIED | `01-test-progress.md` §4–5 |
 | 多 client 并发连接同一会话 | ⚠️ 结论不明确（出现返回错配） | `01-test-progress.md` §6 |
-| 波形值 / 跳变 / X-Z 查询 | ❌ NOT_TESTED | — |
+| 波形值 / 跳变 / X-Z 查询 | ⚠️ NPI 单点值 / X 已验证；GUI 工具未验证 | `01-test-progress.md` §12 |
 | 设计追踪 / schematic / source | ❌ NOT_TESTED（依赖 design DB，未知） | `00-recon.md` §1 |
-| NPI / FSDB Reader 无头查询 | ❌ 未开始 | `04-npi-research.md` |
+| NPI / FSDB Reader 无头查询 | ✅ P0 可用（demo FSDB） | `04-npi-research.md` §4 |
 | MCP server | ❌ 仅设计 | `02-architecture.md` / `03-mcp-plan.md` |
 | Skills | ❌ 仅设计 | `03-mcp-plan.md` §5 |
 | 仓库 / 文档初始化 | ✅ 完成（已 commit 并 push 到 Forgejo `faye/verdimcp`，private） | `progress.md` |
@@ -31,7 +31,7 @@
 | `01-test-progress.md` | 实测进展、传输/GUI/会话细节、踩坑、未验证清单 | 活文档（随测试更新） |
 | `02-architecture.md` | 整体架构 v0.1、部署模式、会话发现、并发与安全 | 草案 |
 | `03-mcp-plan.md` | 三层架构、MCP 工具面、Skills、里程碑 M1–M5 | 方案 |
-| `04-npi-research.md` | NPI / verdi_bridge 调研、性能、验证计划 P0–P2 | 调研 + 待验证 |
+| `04-npi-research.md` | NPI / verdi_bridge 调研、性能、验证计划 P0–P2 | 调研 + P0 实测 |
 | `05-web-api-reference.md` | 本地 HTTP/JSON API 参考设计（若后端做成服务） | 参考设计 |
 | `06-vs-verdi-bridge.md` | 与 RuihongY/verdi_bridge 的对比、差异化策略 | 分析 |
 
@@ -47,13 +47,15 @@
 - 当前仓库有文档、配置、`poc/` 与 `demo/`；`mcp/`、`skills/`、`bin/` **尚未创建**。
 - `03-mcp-plan.md` §3 建议的 `~/mydrv/aiwork/verdi-tools/` 已被本仓库 `~/mydrv/aiwork/verdimcp/` 取代；目录细分仍待确认（见 `progress.md` pending #2）。
 - PoC 源码、脚本与证据已归档到 `poc/`（2026-10-17）。
-- 测试用 demo 在 `demo/`：`rtl/sync_fifo.v` + `tb/tb_sync_fifo.v` + `sim/`（见 `demo/README.md`）。
+- 测试用 demo 在 `demo/`：`rtl/sync_fifo.v` + `tb/tb_sync_fifo.v` + `sim/` + `npi/`（见 `demo/README.md`）。
 
 ## 运行 Verdi / VCS（项目内已知）
 
 - **VCS（VERIFIED）**：`cd demo/sim && make sim`；`synenv.sh` 会 source `/opt/synopsys/env.synopsys.rc`，flags 对应 `.rc` 的 `vcscmd` alias。demo 实测 `TEST PASSED`。
 - **Verdi（VERIFIED）**：`make verdi` 或 `make verdi-server PORT=11066`；底层为 `verdi --full64 ... -f filelist.f -ssf sync_fifo.fsdb`。需要 `DISPLAY`/`XAUTHORITY` 与 license（`.rc` 已提供 `SNPSLMD_LICENSE_FILE`）。
+- **NPI（VERIFIED）**：`cd demo/npi && ./run_npi.sh`；`pynpi` 用系统 Python 3.11，需 `PYTHONPATH=$VERDI_HOME/share/NPI/python` 和 NPI/Qt5 的 `LD_LIBRARY_PATH`。demo 输出 `NPI SMOKE PASSED`。
 - **关键细节**：FSDB 时间单位是 `1ps`；40 ns 的游标值是 `40000`。`-ssf` 打开的窗口不一定是新建的 nWave 窗口，操作前先 `wvOpenFile`。
+- **NPI 性能**：短进程 ~3.1 s，其中 `npisys.init()` ~3.03 s；批量查询前需评估常驻 Reader。
 
 ## 证据标签
 
@@ -64,6 +66,6 @@
 
 ## 交接（2026-10-17）
 
-- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、demo `demo/{rtl,tb,sim}` 并跑通 VCS → FSDB → Verdi/libnclt、首次 commit、创建 private 仓库并 push。
-- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证（demo 已提供 X 场景，可直接接）。
+- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、demo `demo/{rtl,tb,sim}` 并跑通 VCS → FSDB → Verdi/libnclt、NPI P0（`demo/npi`）、首次 commit、创建 private 仓库并 push。
+- **未做**：任何 MCP/skills 代码；GUI 值/跳变/XZ 工具；NPI P1 性能对比与 P2 MCP 集成。
 - **下一步**：见 `progress.md` §4 NEXT。

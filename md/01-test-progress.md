@@ -3,7 +3,7 @@
 > 日期：2026-10-17
 > 宿主：f29（10.3.9.99），用户 faye
 > Verdi：W-2024.09-SP1
-> 结论：**传输与 GUI 控制已实测通过；波形值查询与设计追踪尚未验证。**
+> 结论：**传输、GUI 控制、demo 全链路与 NPI P0 已实测通过；GUI 值查询与设计追踪尚未验证。**
 
 证据标签：VERIFIED（本机实测）/ DOCUMENTED_ONLY（仅文档）/ NOT_TESTED / INFERRED。
 
@@ -43,9 +43,9 @@
 | 8 | 会话注册表 / 端口自动分配 | 通过 |
 | 9 | 多会话并发启动 | 通过 |
 | 10 | 多 client 并发连接同一会话 | **结论不明确** |
-| 11 | 波形值 / 跳变 / X-Z 查询 | 未做 |
+| 11 | 波形值 / 跳变 / X-Z 查询 | NPI 单点值 / X 通过；GUI 工具未做 |
 | 12 | 设计追踪 / schematic / source | 未做 |
-| 13 | NPI 无头查询 | 未做 |
+| 13 | NPI 无头查询（P0） | 通过（demo FSDB，见 §12） |
 | 14 | SSH 远程 | 未做 |
 
 ---
@@ -238,9 +238,9 @@ PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
 | 截图 | ✅ 可用 |
 | 会话/端口管理 | ✅ 可用 |
 | demo 全链路（VCS→FSDB→Verdi） | ✅ 可用（`demo/sync_fifo`） |
-| 值/跳变/X-Z | ❌ 未验证 |
+| 值/跳变/X-Z | ⚠️ NPI 单点值 / X 已验证；GUI 工具未验证 |
 | 设计追踪/schematic/source | ❌ 未验证 |
-| 无头查询（NPI/FSDB Reader） | ❌ 未开始 |
+| 无头查询（NPI/FSDB Reader） | ✅ P0 可用（demo FSDB） |
 | MCP 层 | ❌ 仅方案 |
 | Skills | ❌ 仅方案 |
 
@@ -289,3 +289,59 @@ wvGetFileTimeUnit -win 348634d0                 -> 1ps
   `wvAddSignal` 返回 0。
 - 文件时间单位是 **1ps**，40 ns 的游标值是 `40000`，不是 `40`。
 - demo 的空读 X 场景可直接作为 M3 值 / 跳变 / XZ 的回归输入。
+
+---
+
+## 12. NPI 实测（2026-10-17，P0）
+
+脚本：`demo/npi/npi_smoke.py`；入口：`demo/npi/run_npi.sh`。
+
+```bash
+cd demo/npi
+./run_npi.sh                  # 默认读 ../sim/sync_fifo.fsdb
+```
+
+结果：
+
+```
+NPI SMOKE PASSED
+```
+
+### 环境
+
+- `/usr/bin/python3` **3.11.2**；`pynpi` 在 `$VERDI_HOME/share/NPI/python`，无需 pip。
+- `PYTHONPATH=$VERDI_HOME/share/NPI/python`
+- `LD_LIBRARY_PATH=$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib`
+  （否则 `libQt5Script.so.5` 缺失）
+- `npisys.init()` + `waveform.open()` 成功，license 无 checkout 错误。
+
+### 结果（demo FSDB）
+
+- `scale_unit=1ps`，`min/max=0/240000`
+- `tb_sync_fifo.rst_n @ 40ns` = `1`
+- `tb_sync_fifo.rd_data @ 40ns` = `XX`
+- `tb_sync_fifo.count @ 240ns` = `0`
+- `rd_data 0..50ns` = `[(0, 'XX')]`
+- `sig_find_x_backward(rd_data, 100ns)` = `(0, 'XX')`
+- `clk vc_count 0..240ns` = `49`
+
+### 耗时 / 内存
+
+短进程两次运行：
+
+| 阶段 | 耗时 |
+|---|---:|
+| `import pynpi` | 0.029 s |
+| `npisys.init()` | 3.03 s |
+| `waveform.open()` | 0.005–0.008 s |
+| 100× `sig_value_at` | 0.001–0.002 s |
+| `close` + `end` | 0.03–0.04 s |
+| **总计** | **~3.1 s** |
+| 峰值 RSS | **106 MB** |
+
+### 语义坑
+
+- `sig_find_x_forward(..., 0)` 找不到 time 0 的初始 X（初始值不是 value change）；
+  用 `sig_value_between()` 或 `sig_find_x_backward()`。
+- 3.1 s 主要花在 `npisys.init()`；如果 MCP 每次查询都起短进程，小查询会明显变慢。
+  常驻 Reader 是否值得，需要 P1 的批量查询数据。

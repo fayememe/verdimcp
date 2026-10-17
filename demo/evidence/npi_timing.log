@@ -1,0 +1,14 @@
+== run 1 ==
+import 0.029 s
+init 3.036 s
+open 0.008 s
+100x value_at 0.002 s (0.0 ms/call)
+close/end 0.033 s
+total 3.107 s
+== run 2 ==
+import 0.029 s
+init 3.029 s
+open 0.005 s
+100x value_at 0.001 s (0.0 ms/call)
+close/end 0.041 s
+total 3.105 s

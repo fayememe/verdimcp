@@ -30,7 +30,7 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 ### 依赖与授权
 
 - Verdi 主机需要能导入 `pynpi` 的 Python（对方测试使用 3.6.8）；需具备 `VERDI_HOME`、可读 FSDB 和 Verdi 相关 license 环境。
-- 对方说明无可用授权时 NPI 无法打开 FSDB，`auto` 回退 GUI。**我们当前 license 能否支持尚未验证**，也不能据此断言必须额外购买。
+- 对方说明无可用授权时 NPI 无法打开 FSDB，`auto` 回退 GUI。**f29 P0 已验证当前 license 可打开 demo FSDB**；大 FSDB 与并发 license 占用待 P1。
 - 仅对可读 FSDB 做此路径；不能假定 VCD 支持。
 - 同一时间戳的多个变化 / glitch 可能被折叠；不能把返回结果当作完整 delta-cycle event stream。X/Z 必须保留，时间精度用整数 tick 或精确十进制表示。
 
@@ -56,6 +56,42 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 - 用已知 FSDB 查询信号列表、单点值、指定时间窗变化；对比 nWave。
 - 记录初始化时间、首查/热查延迟、RSS、license 状态和失败信息。
 
+### P0 实测（2026-10-17，VERIFIED）
+
+- **Python**：`/usr/bin/python3` **3.11.2**；`pynpi` 位于
+  `$VERDI_HOME/share/NPI/python`，可直接 import（无需 pip）。
+- **环境**：需要 `PYTHONPATH=$VERDI_HOME/share/NPI/python`；还需要
+  `LD_LIBRARY_PATH=$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib`，
+  否则 `import pynpi` 会因 `libQt5Script.so.5` 缺失失败。
+- **License**：`npisys.init()` + `waveform.open()` 成功，无 checkout 错误。
+- **被测 FSDB**：`demo/sim/sync_fifo.fsdb`（9677 bytes）；`scale_unit=1ps`，
+  `min/max=0/240000`。
+- **查询结果**：
+  - `tb_sync_fifo.rst_n @ 40ns` = `1`
+  - `tb_sync_fifo.rd_data @ 40ns` = `XX`
+  - `tb_sync_fifo.count @ 240ns` = `0`
+  - `rd_data 0..50ns` = `[(0, 'XX')]`
+  - `sig_find_x_backward(rd_data, 100ns)` = `(0, 'XX')`
+  - `clk vc_count 0..240ns` = `49`
+- **耗时 / 内存**（两次运行，短进程）：
+
+  | 阶段 | 耗时 |
+  |---|---:|
+  | `import pynpi` | 0.029 s |
+  | `npisys.init()` | 3.03 s |
+  | `waveform.open()` | 0.005–0.008 s |
+  | 100× `sig_value_at` | 0.001–0.002 s |
+  | `close` + `end` | 0.03–0.04 s |
+  | 总计 | **~3.1 s** |
+  | 峰值 RSS | **106 MB** |
+
+- **脚本 / 证据**：`demo/npi/npi_smoke.py`、`demo/npi/run_npi.sh`；
+  输出 `demo/evidence/npi_smoke.log`、计时 `demo/evidence/npi_timing.log`。
+- **语义坑**：`sig_find_x_forward(..., 0)` 找不到 time 0 的初始 X（初始值不是 value change）；
+  用 `sig_value_between()` 或 `sig_find_x_backward()`。
+- **尚未做（P1）**：信号/层级列表 dump、128 signals × 8 timestamps、GUI/libnclt 对比、
+  大 FSDB、正在写入的 FSDB、并发 worker。
+
 **P1：性能与语义**
 - 小查询（1–4 signals × 少量 timestamps）、中等查询（128 signals × 8 timestamps）、长区间 transition count、clock sampling。
 - 比较 GUI/libnclt 与 NPI 的 wall time、GUI 响应性、峰值内存、结果一致性。
@@ -71,8 +107,8 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 
 ## 5. 待决事项
 
-1. f29 上 `pynpi` 是否可导入、能否正常 checkout 所需 license？
-2. 我们现有 Verdi/FSDB 版本的 API 行为是否与参考项目一致？
+1. ~~f29 上 `pynpi` 是否可导入、能否正常 checkout 所需 license？~~ → ✅ 已实测：可导入、可打开 FSDB（见 P0 实测）。
+2. 我们现有 Verdi/FSDB 版本的 API 行为是否与参考项目一致？→ demo FSDB 上单点值 / X / vc_count 正常；大 FSDB 与边界语义待 P1。
 3. 当前项目上下文如何可靠解析远程 host、user 和 Verdi session？
 4. 对方的 `npi_engine.py` 可参考哪些算法/接口设计？需核对版本与许可约束。
 5. 是否需要支持多 Agent 同时访问同一 GUI，以及会话所有权如何管理？
@@ -83,4 +119,5 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 - [Architecture / Headless engine](https://github.com/RuihongY/verdi_bridge/blob/main/docs/architecture.md)
 - [Tool reference / Headless NPI / benchmarks](https://github.com/RuihongY/verdi_bridge/blob/main/docs/tools.md)
 
-> 本文将“对方文档已经实现并测量的事实”与“我们的设计建议、待验证假设”分开表述。未连接 f29 实际执行测试。
+> 本文将“对方文档已经实现并测量的事实”与“我们的设计建议、待验证假设”分开表述。
+> f29 的 P0 已完成（见上）；P1 性能对比与 P2 MCP 集成尚未开始。

@@ -9,6 +9,8 @@
 # runtime logs / session state
 *.log
 !poc/evidence/*.log
+!demo/evidence/*.log
+npiLog/
 verdiLog/
 verdi-sessions/
 artifacts/

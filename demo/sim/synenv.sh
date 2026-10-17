@@ -14,7 +14,7 @@ fi
 # absent versions (for example vc_static); do not let that abort this wrapper.
 set +e
 # shellcheck disable=SC1090
-source "$ENV_RC"
+source "$ENV_RC" >/dev/null 2>&1
 set -e
 
 exec "$@"

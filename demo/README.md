@@ -94,6 +94,30 @@ cd poc
 实测：11 个信号全部加入成功；`wvGetFileTimeUnit` 返回 **1ps**，所以 40 ns 的游标值是
 `40000`，不是 `40`。`rd_data` 在空 FIFO 阶段显示为 X。截图：`evidence/nwave.png`。
 
+## NPI 无头查询（VERIFIED 2026-10-17）
+
+```bash
+cd demo/npi
+./run_npi.sh
+```
+
+`run_npi.sh` 会 source `demo/sim/synenv.sh`，再设置 NPI 需要的 `PYTHONPATH` 与
+`LD_LIBRARY_PATH`（含 Verdi 的 Qt5 lib），最后运行 `npi_smoke.py`。
+
+结果：
+
+```
+NPI SMOKE PASSED
+```
+
+- `scale_unit=1ps`，`min/max=0/240000`
+- `rd_data @ 40ns` = `XX`
+- `rd_data 0..50ns` = `[(0, 'XX')]`
+- `clk vc_count 0..240ns` = `49`
+- 短进程总耗时 ~3.1 s，其中 `npisys.init()` ~3.03 s，峰值 RSS ~106 MB。
+
+证据：`evidence/npi_smoke.log`、`evidence/npi_timing.log`。
+
 ## 预期波形 landmark
 
 - `~0 ns`：`rd_data` 为 X（空 FIFO + 未初始化 memory）；
