@@ -20,6 +20,13 @@ build/
 coverage/
 .bun/
 
+# demo simulation outputs
+demo/sim/simv*
+demo/sim/csrc/
+demo/sim/*.fsdb
+demo/sim/*.vpd
+demo/sim/ucli.key
+
 # python
 __pycache__/
 *.py[cod]

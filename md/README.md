@@ -21,6 +21,7 @@
 | MCP server | ❌ 仅设计 | `02-architecture.md` / `03-mcp-plan.md` |
 | Skills | ❌ 仅设计 | `03-mcp-plan.md` §5 |
 | 仓库 / 文档初始化 | ✅ 完成（已 commit 并 push 到 Forgejo `faye/verdimcp`，private） | `progress.md` |
+| demo（`sync_fifo`） | ✅ 骨架建立；❌ 未跑仿真（VCS 调用命令未知） | `demo/README.md` |
 
 ## 文档索引
 
@@ -43,9 +44,15 @@
 
 ## 代码布局（现状与待定）
 
-- 当前仓库只有文档与配置；`mcp/`、`skills/`、`bin/` **尚未创建**。
-- `03-mcp-plan.md` §3 建议的 `~/mydrv/aiwork/verdi-tools/` 已被本仓库 `~/mydrv/aiwork/verdimcp/` 取代；目录细分仍待确认（见 `progress.md` pending #2）。
+- 当前仓库有文档、配置、`poc/` 与 `demo/`；`mcp/`、`skills/`、`bin/` **尚未创建**。
+- `03-mcp-plan.md` §3 建议的 `~/mydrv/aiwork/verdi-tools/` 已被本仓库 `~/mydrv/aiwork/verdimcp/` 取代；目录细分仍待确认（见 `progress.md` pending #3）。
 - PoC 源码、脚本与证据已归档到 `poc/`（2026-10-17）。
+- 测试用 demo 在 `demo/`：`rtl/sync_fifo.v` + `tb/tb_sync_fifo.v` + `sim/`（见 `demo/README.md`）。
+
+## 运行 Verdi / VCS（项目内已知）
+
+- **Verdi：有记录（VERIFIED）**：`verdi -serverPort <port> -ssf <fsdb>`；需要 `VERDI_HOME`、`SNPSLMD_LICENSE_FILE=27010@127.0.0.1`、可用的 `DISPLAY`/`XAUTHORITY`。详见 `00-recon.md` §2、`01-test-progress.md` §3。
+- **VCS：无记录**：项目内没有 VCS 编译/运行命令；`demo/sim/Makefile` 的 VCS 目标是占位，待 faye 提供实际命令。
 
 ## 证据标签
 
@@ -56,6 +63,6 @@
 
 ## 交接（2026-10-17）
 
-- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、首次 commit、创建 private 仓库并 push。
-- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证。
+- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、demo 骨架 `demo/{rtl,tb,sim}`、首次 commit、创建 private 仓库并 push。
+- **未做**：任何 MCP/skills 代码；demo 的 VCS/仿真（不知道 VCS 调用命令）；值/跳变/XZ 与 NPI 验证。
 - **下一步**：见 `progress.md` §4 NEXT。
