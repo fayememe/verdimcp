@@ -1,0 +1,34 @@
+# secrets / local env
+.env
+.env.*
+!.env.example
+
+# agent local state (progress.md + md/ are the durable record)
+.omo/
+
+# runtime logs / session state
+*.log
+!poc/evidence/*.log
+verdiLog/
+verdi-sessions/
+artifacts/
+
+# builds
+node_modules/
+dist/
+build/
+coverage/
+.bun/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

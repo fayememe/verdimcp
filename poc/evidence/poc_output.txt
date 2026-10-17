@@ -1,0 +1,13 @@
+EVENT	wvCreateWindow	3f0a3ef0
+EVENT	verdiMonoFontEvent	DejaVu Sans Mono,11
+OK	wvCreateWindow	3daa2830
+EVENT	wvCreateWindow	3daa2830
+OK	wvOpenFile -win 3daa2830 /tmp/opencode/verdi_poc/demo/behav.fsdb	/tmp/opencode/verdi_poc/demo/behav.fsdb
+EVENT	wvOpenFSDBFile	/tmp/opencode/verdi_poc/demo/behav.fsdb
+EVENT	wvViewRangeChanged	0.000000 1227.150000
+OK	wvAddSignal -win 3daa2830 /system/CYCLE /system/R_W /system/VMA	1
+EVENT	wvAddSignal	/ 3 {/system/CYCLE} {/system/R_W} {/system/VMA}
+EVENT	wvAddSignalByIdCode	-idcode 3 {1 21 20}
+OK	wvSetCursor -win 3daa2830 100	1
+EVENT	wvCursorTimeChange	100 {NULL} /tmp/opencode/verdi_poc/demo/behav.fsdb
+OK	wvDumpSignalListToFile -win 3daa2830 -signal -file /tmp/opencode/verdi_poc/signals.txt	1

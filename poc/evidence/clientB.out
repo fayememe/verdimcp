@@ -1,0 +1,2 @@
+OK	wvCreateWindow	(null)
+ERR	wvGetAllWindows	ERR_CURRENT_SOCKET_CLOSED
