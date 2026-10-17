@@ -57,7 +57,7 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 
 目录结构（建议）：
 
-> 注（2026-10-17）：仓库根已定为 `~/mydrv/aiwork/verdimcp/`；下图的 `verdi-tools/` 视为仓库根，`docs/` 由 `md/` 取代。子目录是否照此创建仍待确认（见 `progress.md` pending #4）。
+> 注（2026-10-17）：仓库根已定为 `~/mydrv/aiwork/verdimcp/`；下图的 `verdi-tools/` 视为仓库根，`docs/` 由 `md/` 取代。子目录是否照此创建仍待确认（见 `progress.md` pending #2）。
 
 ```
 ~/mydrv/aiwork/verdi-tools/          # 待确认是否进 Syncthing

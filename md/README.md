@@ -20,7 +20,7 @@
 | NPI / FSDB Reader 无头查询 | ❌ 未开始 | `04-npi-research.md` |
 | MCP server | ❌ 仅设计 | `02-architecture.md` / `03-mcp-plan.md` |
 | Skills | ❌ 仅设计 | `03-mcp-plan.md` §5 |
-| 仓库 / 文档初始化 | ✅ 完成（已首次 commit） | `progress.md` |
+| 仓库 / 文档初始化 | ✅ 完成（已 commit 并 push 到 Forgejo `faye/verdimcp`，private） | `progress.md` |
 
 ## 文档索引
 
@@ -44,7 +44,7 @@
 ## 代码布局（现状与待定）
 
 - 当前仓库只有文档与配置；`mcp/`、`skills/`、`bin/` **尚未创建**。
-- `03-mcp-plan.md` §3 建议的 `~/mydrv/aiwork/verdi-tools/` 已被本仓库 `~/mydrv/aiwork/verdimcp/` 取代；目录细分仍待确认（见 `progress.md` pending #3）。
+- `03-mcp-plan.md` §3 建议的 `~/mydrv/aiwork/verdi-tools/` 已被本仓库 `~/mydrv/aiwork/verdimcp/` 取代；目录细分仍待确认（见 `progress.md` pending #2）。
 - PoC 源码、脚本与证据已归档到 `poc/`（2026-10-17）。
 
 ## 证据标签
@@ -56,6 +56,6 @@
 
 ## 交接（2026-10-17）
 
-- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、首次 commit。
-- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证；远端 push（`credential.helper` 已配置，但 `~/mycreds/.git_fayehome_cred` 尚未由 faye 放置）。
+- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、首次 commit、创建 private 仓库并 push。
+- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证。
 - **下一步**：见 `progress.md` §4 NEXT。
