@@ -8,6 +8,7 @@
 - **仓库**：`~/mydrv/aiwork/verdimcp`，git 已初始化（branch `main`），remote `origin` = `https://git.softkitty.me/faye/verdimcp.git`；初始 commit 已建立。
 - **文档**：inbox 原有 7 份文档已归档进 `md/` 并编号；`md/README.md` 为索引与交接；`AGENTS.md` 已改为 verdimcp / f29 规则。
 - **opencode**：项目级 `opencode.json` 已建立，`instructions` 加载 `progress.md` 与 `md/README.md`；`AGENTS.md` 自动生效。
+- **git 认证**：全局 `credential.helper = store --file=/home/faye/mycreds/.git_fayehome_cred` 已配置；**该文件当前不存在**，push 仍被阻塞（详见 pending #1）。
 - **代码**：MCP server / skills 尚未开始；PoC 源码、脚本与证据已归档到 `poc/`（来自 `/tmp/opencode/verdi_poc/`）。
 - **实测基线（f29）**：socket 传输、nWave 建窗/开库/加信号/游标/枚举、事件回调、截图、会话注册表已验证；值/跳变/XZ、设计追踪、NPI 未验证。详见 `md/01-test-progress.md`。
 
@@ -28,7 +29,7 @@
 
 ## 3. pending issues / blocker
 
-1. **远端仓库 / push 未确认**：未认证 `GET /api/v1/repos/faye/verdimcp` 返回 404；HTTPS push 需要 credential helper（当前未配置）；SSH 22 从本机不可达（`Network is unreachable`，DNS 只给出 IPv6）。→ 需 faye 确认仓库已建，并确定凭据方式。
+1. **push 被凭据阻塞**：按 `~/matrix/homelab/services/git.md` 已配置全局 `credential.helper = store --file=/home/faye/mycreds/.git_fayehome_cred`，但**该文件不存在**（该目录下只有 `.nas19_cred`，格式也不是 git credential-store）。→ 需 faye 放置该凭据文件（0600），不要自行生成。补充：LAN `10.3.9.19:2222` 可达但当前 SSH key 未被 Forgejo 授权；HTTPS 未认证访问仓库返回 404（可能 private）。
 2. **M0 未收口**：`verdi-session` 仍假定 `cmdclient` 位于 `~/.local/libexec/verdi-session/cmdclient`，安装路径与一键构建未固定。
 3. **代码布局未定**：`mcp/`、`skills/`、`bin/` 是否按 `03-mcp-plan.md` §3 放在仓库根；该文档里的 `~/mydrv/aiwork/verdi-tools/` 建议已过时。
 4. **值 / 跳变 / XZ 查询未验证**（M3 前置）。
@@ -39,7 +40,7 @@
 
 ## 4. NEXT（下一步）
 
-1. faye 确认远端仓库是否存在、push 凭据方式；配置 `git credential.helper` 后首次 push。
+1. faye 放置 `~/mycreds/.git_fayehome_cred`（0600）；然后 `GIT_TERMINAL_PROMPT=0 git fetch origin` 验证，成功后 `git push -u origin main`。若仓库尚未创建，先在 Forgejo 建 `faye/verdimcp`（private）。
 2. 收口 M0：固定 `verdi-session` 安装路径，跑一遍 `poc/build.sh` + `run_poc.sh` 验证归档副本可用。
 3. 确认代码布局后创建目录骨架，锁定 Bun + `@modelcontextprotocol/sdk`。
 4. 开始 M1：先做 `verdi_sessions_list` / `session_info` / `windows_list` / `window_screenshot` 四个只读工具。

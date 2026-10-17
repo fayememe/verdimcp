@@ -57,5 +57,5 @@
 ## 交接（2026-10-17）
 
 - **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、首次 commit。
-- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证；远端 push（仓库存在性与凭据未确认）。
+- **未做**：任何 MCP/skills 代码；值/跳变/XZ 与 NPI 验证；远端 push（`credential.helper` 已配置，但 `~/mycreds/.git_fayehome_cred` 尚未由 faye 放置）。
 - **下一步**：见 `progress.md` §4 NEXT。
