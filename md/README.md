@@ -15,9 +15,11 @@
 | nWave：建窗 / 开库 / 加信号 / 游标 / 信号枚举 | ✅ VERIFIED | `01-test-progress.md` §3–4 |
 | 事件回调 / 截图 / 会话注册表 / 多会话启动 | ✅ VERIFIED | `01-test-progress.md` §4–5 |
 | 多 client 并发连接同一会话 | ⚠️ 结论不明确（出现返回错配） | `01-test-progress.md` §6 |
-| 波形值 / 跳变 / X-Z 查询 | ⚠️ NPI 单点值 / X 已验证；GUI 工具未验证 | `01-test-progress.md` §12 |
-| 设计追踪 / schematic / source | ❌ NOT_TESTED（依赖 design DB，未知） | `00-recon.md` §1 |
-| NPI / FSDB Reader 无头查询 | ✅ P0 可用（demo FSDB） | `04-npi-research.md` §4 |
+| 波形值 / 跳变 / X-Z 查询 | ✅ VERIFIED（GUI + NPI；X/Z 均验证） | `01-test-progress.md` §5A–5E |
+| 设计追踪 / schematic / source | ✅ VERIFIED（driver/load/fan-in/X/source；需 `-f`） | `01-test-progress.md` §5D |
+| NPI / FSDB Reader 无头查询 | ✅ P0 可用（Verdi Python 3.8 / 系统 Python 3.11） | `04-npi-research.md` §4 |
+| 大 FSDB / 全量 XZ 扫描 | ⚠️ GUI 逐点慢；NPI 可用但工具未封装 | `01-test-progress.md` §8 |
+| SSH / 多用户 | ❌ 未做 | `01-test-progress.md` §8 |
 | MCP server | ❌ 仅设计 | `02-architecture.md` / `03-mcp-plan.md` |
 | Skills | ❌ 仅设计 | `03-mcp-plan.md` §5 |
 | 仓库 / 文档初始化 | ✅ 完成（已 commit 并 push 到 Forgejo `faye/verdimcp`，private） | `progress.md` |
@@ -66,6 +68,6 @@
 
 ## 交接（2026-10-17）
 
-- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、demo `demo/{rtl,tb,sim}` 并跑通 VCS → FSDB → Verdi/libnclt、NPI P0（`demo/npi`）、首次 commit、创建 private 仓库并 push。
-- **未做**：任何 MCP/skills 代码；GUI 值/跳变/XZ 工具；NPI P1 性能对比与 P2 MCP 集成。
+- **完成**：`git init`（`main`，origin 指向 Forgejo）、`opencode.json`、`.gitignore`、7 份 inbox 文档归档进 `md/`、`progress.md`、`AGENTS.md` 改为 verdimcp / f29 口径、PoC 归档到 `poc/`、demo `demo/{rtl,tb,sim}` 跑通 VCS → FSDB → Verdi/libnclt、NPI P0（`demo/npi`）、同步邻目录新增的 GUI 值/跳变/XZ/设计追踪/NPI 实测结论、创建 private 仓库并 push。
+- **未做**：任何 MCP/skills 代码；全量 XZ 扫描工具；SSH/多用户；NPI P1 大 FSDB 与 P2 MCP 集成。
 - **下一步**：见 `progress.md` §4 NEXT。

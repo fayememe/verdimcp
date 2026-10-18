@@ -53,7 +53,7 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 | Verdi 命令 | 复用已验证的 `cmdclient`（C + libnclt） | 已实测连接、返回值、事件、nWave 操作 |
 | 并发 | 每会话 `flock` 串行化 `cmdclient` 调用 | 规避"多 client 语义未证实"的风险 |
 | broker | M1 不做；多 agent 并发时再加 | MCP 工具面不变，后端可替换 |
-| 无头查询 | 后续接 NPI / FSDB Reader | 大 FSDB 不占 GUI |
+| 无头查询 | **NPI 已验证**（Verdi Python 3.8 或系统 Python 3.11 + `pynpi`）；FSDB Reader 备选 | 大 FSDB 不占 GUI |
 
 目录结构（建议）：
 
@@ -118,25 +118,29 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 | `verdi_signals_add` | wid, signals[] | 每信号结果 | VERIFIED |
 | `verdi_signals_remove` | wid, signals[] | ok | DOCUMENTED |
 | `verdi_cursor_set` | wid, time, unit | 实际时间 | VERIFIED |
-| `verdi_value_get` | wid, signal, time, unit | value + X/Z | **NOT_TESTED** |
-| `verdi_transitions_get` | wid, signal, start, end, unit, max | 跳变列表 | **NOT_TESTED** |
-| `verdi_xz_scan` | wid, scope, start, end, max | 候选列表 | **NOT_TESTED** |
+| `verdi_value_get` | wid, signal, time, unit | value + X/Z | VERIFIED（GUI；NPI 更快） |
+| `verdi_transitions_get` | wid, signal, start, end, unit, max | 跳变列表 | VERIFIED（`wvSearchNextBySignal` 循环 / NPI `sig_value_between`） |
+| `verdi_xz_scan` | wid, scope, start, end, max | 候选列表 | 部分 VERIFIED（NPI 验证；扫描工具未封装） |
 
 ### 4.4 设计
 
 | 工具 | 输入 | 输出 | 后端状态 |
 |---|---|---|---|
 | `verdi_scopes_list` | sid, root, limit | scope 列表 | DOCUMENTED |
-| `verdi_drivers_get` | sid, signal | driver 列表 | **NOT_TESTED** |
-| `verdi_fanin_get` | sid, signal, levels | cone | **NOT_TESTED** |
-| `verdi_fanout_get` | sid, signal, levels | cone | **NOT_TESTED** |
-| `verdi_source_get` | sid, signal/file, line | 源码片段 | **NOT_TESTED** |
+| `verdi_drivers_get` | sid, signal | driver 列表 | VERIFIED（需 `-f` 设计库） |
+| `verdi_fanin_get` | sid, signal, levels | cone | 部分 VERIFIED（1 层；多点 cone 未测） |
+| `verdi_fanout_get` | sid, signal, levels | cone | 未测 |
+| `verdi_source_get` | sid, signal/file, line | 源码片段 | VERIFIED（`srcCreateWindow` + `srcGetCaretFile`） |
 
 ### 4.5 逃生口
 
 | 工具 | 条件 | 说明 |
 |---|---|---|
 | `verdi_command` | 环境变量 `VERDI_ALLOW_RAW=1` | 原始 Tcl，逐条审计，默认关闭 |
+
+> 值/跳变/XZ 与设计追踪的实测命令、语义和坑见 `01-test-progress.md` §5A–5E。
+> 关键语义：值查询支持 `-lz` 定宽；X/Z 保留字符串；总线名用 `{}`；信号必须先加入窗口。
+> `wvSearchNextBySignal` 是“找下一个跳变”，需循环；glitch 会被跳过。
 
 ---
 

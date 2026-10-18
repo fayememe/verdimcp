@@ -3,7 +3,7 @@
 > 日期：2026-10-17
 > 宿主：f29（10.3.9.99），用户 faye
 > Verdi：W-2024.09-SP1
-> 结论：**传输、GUI 控制、demo 全链路与 NPI P0 已实测通过；GUI 值查询与设计追踪尚未验证。**
+> 结论：**传输、GUI 控制、值/跳变查询、X/Z 处理、设计追踪、NPI 无头查询均已实测通过。剩余：远程/多用户、并发语义、大 FSDB 性能。**
 
 证据标签：VERIFIED（本机实测）/ DOCUMENTED_ONLY（仅文档）/ NOT_TESTED / INFERRED。
 
@@ -43,10 +43,11 @@
 | 8 | 会话注册表 / 端口自动分配 | 通过 |
 | 9 | 多会话并发启动 | 通过 |
 | 10 | 多 client 并发连接同一会话 | **结论不明确** |
-| 11 | 波形值 / 跳变 / X-Z 查询 | NPI 单点值 / X 通过；GUI 工具未做 |
-| 12 | 设计追踪 / schematic / source | 未做 |
-| 13 | NPI 无头查询（P0） | 通过（demo FSDB，见 §12） |
-| 14 | SSH 远程 | 未做 |
+| 11 | 波形值 / 跳变 / X-Z 查询 | 通过 |
+| 12 | 设计追踪 / schematic / source | 通过 |
+| 13 | NPI 无头查询 | 通过 |
+| 14 | Z 值专项（自制 VCD→FSDB） | 通过 |
+| 15 | SSH 远程 | 未做 |
 
 ---
 
@@ -152,6 +153,204 @@ start label=concB → sid f41f9e43, port 11066
 
 ---
 
+## 5A. 波形值查询（VERIFIED）
+
+命令（nWave 窗口内，信号需先加入窗口）：
+
+```
+wvSetCursor -win W 0
+wvGetSigValueByTime -win W /system/R_W -time 0                 → x
+wvGetSigValueByTime -win W /system/CYCLE -time 100             → 32
+wvGetSigValueByTime -win W {/system/data[7:0]} -time 0         → xxxxxxxx
+wvGetSigValueByTime -win W {/system/data[7:0]} -time 400 -lz   → 00000100
+wvGetCurValueString -win W /system/R_W                         → x
+```
+
+结论：
+
+- 值查询可用，支持 `-format Bin|Hex|...`；
+- 不加 `-lz` 会省略前导零（`100`），加 `-lz` 返回定宽（`00000100`）；
+- X/Z 保留为字符串，不会被转成 0；
+- 总线信号必须用 `{}` 包住，避免 Tcl 把 `[7:0]` 当命令替换；
+- 信号必须先 `wvAddSignal` 到目标窗口，否则查询失败/返回空。
+
+---
+
+## 5B. 跳变查询（VERIFIED）
+
+单条命令是"找下一个跳变"，不是"列出所有跳变"：
+
+```
+wvSearchNextBySignal -win W -delim / {/system/data[7:0]} -time 0   → 1 400
+wvSearchNextBySignal -win W -delim / {/system/data[7:0]} -time 400 → 1 500
+```
+
+返回值格式为 `1 <time>`；没有跳变返回 `0`。循环即可得到跳变列表。
+
+实测 `/system/data[7:0]`（0–2000ns）：
+
+| 时间 | 值（Bin，-lz） |
+|---|---|
+| 400 | 00000100 |
+| 500 | 00110100 |
+| 800 | 01010101 |
+| 1100 | 00101000 |
+| 1200 | 00100000 |
+| 1550 | 01010101 |
+| 1650 | 00100000 |
+| 1700 | 00001100 |
+
+注意：文档明确说明 **glitch 会被跳过**；delta-cycle 完整性不保证。需要完整事件流时用 NPI 交叉验证。
+
+---
+
+## 5C. X/Z 验证（VERIFIED）
+
+Demo FSDB 里有 X、没有 Z：
+
+- `R_W` 在 0ns 为 `x`，25ns 变 `1`；
+- `data[7:0]` 在 0–1500ns 为 `xxxxxxxx`，1600ns 后变为正常值。
+
+为了验证 Z，用 `vcd2fsdb` 自制了一个最小 FSDB：
+
+```verilog
+// tri.vcd: y 依次 x → 0 → z → 1；d[7:0] 依次 x → 0 → z → 1
+$timescale 1ns $end
+$scope module t $end
+$var wire 1 ! y $end
+$var wire 8 " d [7:0] $end
+$upscope $end
+#0  x!  bxxxxxxxx "
+#10 0!  b00000000 "
+#20 z!  bzzzzzzzz "
+#30 1!  b10101010 "
+```
+
+```
+vcd2fsdb tri.vcd          # 输出 tri.vcd.fsdb
+```
+
+GUI 查询结果：
+
+```
+/t/y @0  → x
+/t/y @10 → 0
+/t/y @20 → z
+/t/y @30 → 1
+/t/d[7:0] @20 -lz → zzzzzzzz
+```
+
+NPI 查询结果一致：
+
+```
+sig_value_between("t.y", 0, 30) → [(0,'x'), (10,'0'), (20,'z'), (30,'1')]
+```
+
+结论：X 和 Z 都能被正确读出并以字符串保留，包括整条总线全 Z。
+
+---
+
+## 5D. 设计追踪 / schematic / source（VERIFIED）
+
+启动时带上 RTL filelist，让 Verdi elaborate：
+
+```
+verdi -serverPort N -f run.f -top system -ssf behav.fsdb -nologo
+```
+
+实测：
+
+| 操作 | 命令 | 结果 |
+|---|---|---|
+| 源码窗口 | `srcCreateWindow -scope {system.i_cpu}` | 窗口 `3b83ea50` |
+| 源码定位 | `srcGetCaretFile -win 3b83ea50` | `/tmp/opencode/verdi_poc/demo/cpu.v` |
+| 建层次图 | `schCreateWindow -delim . -scope {system.i_cpu}` | 窗口 `47148a60` |
+| driver | `schTraceDriver -win 47148a60 -delim . -signal {system.i_cpu.R_W}` | `{system.i_cpu} {CPU(@1):Always0:69:76:Reg}` |
+| fan-in | `schTraceFanIn -win 47148a60 -delim . -signal {system.i_cpu.R_W}` | 同上（1 层） |
+| load | `schTraceLoad -win 47148a60 -delim . -signal {system.i_cpu.R_W}` | `{system.i_cpu} {CPU(@1):SigOp1:67:67:Combo}` |
+| 叶子引脚报告 | `schDumpTracedLeafPin -delim .` | 写入 `demo/verdiLog/leafpin.rpt` |
+| X 追踪 | `schCreateWindow -delim . -X -time 0 {system.i_cpu.acc[3]}` | 窗口 `4716e560` |
+| 对象查询 | `schQueryObj -instport {system.i_cpu.clock}` | `clock in 1` |
+
+`leafpin.rpt`（driver）：
+
+```
+system.i_cpu.CPU(@1):Always0:69:76:Reg.R_W
+system.i_cpu.CPU(@1):Always1:78:154:NonSyn.R_W
+```
+
+`leafpin.rpt`（load）：
+
+```
+system.i_cpu.CPU(@1):SigOp1:67:67:Combo.I1
+system.i_pram.pram:Always0:38:43:ComboMemory_macroram[255:0].IH_R_W
+system.i_pram.pram:SigOp0:36:36:Combo.I1
+```
+
+X 追踪窗口截图 `nschema_x.png` 显示 X 沿电路传播；源码/层次/波形同屏截图 `source_window.png`（2560×1412）。
+
+踩坑：
+
+- `schDumpTracedLeafPin` 必须紧跟在 `schTraceDriver` / `schTraceLoad` / `schTraceConnectivity` 之后；只做 `schCreateWindow -driver` 会报 "previous action was not tracing..."。
+- `schCreateWindow -X` 的信号名是**位置参数**，不是 `-signal`（文档语法有误导）。
+- `schTraceDriver` 在 **full hierarchy** 窗口返回列表；在 flattened 窗口只返回 1。
+- `schDriverCount` 实测返回 `2`（可能是实际驱动数；文档写 "1 if successful"，存在歧义）。
+
+---
+
+## 5E. NPI 无头查询（VERIFIED）
+
+Verdi 自带 Python 3.8：
+
+```
+$VERDI_HOME/platform/linux64/python-3.8/bin/python3.8
+```
+
+> 本仓库 `demo/npi/run_npi.sh` 用系统 Python 3.11 也验证通过；两条路径都可用。
+
+环境：
+
+```bash
+export VERDI_HOME=/opt/synopsys/verdi/W-2024.09-SP1
+export SNPSLMD_LICENSE_FILE=27010@127.0.0.1
+export PYTHONPATH=$VERDI_HOME/share/NPI/python
+export LD_LIBRARY_PATH=$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib
+```
+
+最小脚本：
+
+```python
+from pynpi import npisys, waveform
+npisys.init(["pynpi"])
+f = waveform.open("/path/x.fsdb")
+print(waveform.time_scale_unit(f))          # 1ns
+print(waveform.sig_value_at(f, "t.y", 20)) # z
+print(waveform.sig_value_between(f, "t.y", 0, 30))
+waveform.close(f)
+npisys.end()
+```
+
+实测：
+
+- `t.y`: `0→x, 10→0, 20→z, 30→1`
+- `t.d[7:0] @20`: `zzzzzzzz`
+- `sig_value_between("t.y",0,30)` → `[(0,'x'),(10,'0'),(20,'z'),(30,'1')]`
+- `behav.fsdb` 的 `system.data[7:0]`：10 个跳变，含 `00000100` 等定宽值
+- `system.R_W`：`[(0,'x'),(25,'1'),(1550,'0'),(1650,'1')]`
+
+命名规则：NPI 用点分隔、**不带前导斜杠**（`system.data[7:0]`）；`/system/data[7:0]` 会失败。
+
+性能：
+
+| 路径 | 20 次查询 | 说明 |
+|---|---|---|
+| GUI `wvGetSigValueByTime` | 4.4 s（~0.22 s/次） | 走 GUI 线程 |
+| NPI（进程内、已打开文件） | 100 次 < 0.01 s | 同一进程内直接读 FSDB |
+
+结论：**大范围扫描应走 NPI**；GUI 只用于"摆给人看"和少量交互查询。
+
+---
+
 ## 6. 并发连接（结论不明确）
 
 文档（`cmdclt.h`）：
@@ -185,38 +384,40 @@ start label=concB → sid f41f9e43, port 11066
 
 ## 8. 未验证 / 未开始
 
-- `wvGetSigValueByTime` / `wvGetCurValueString`（值查询）
-- 跳变列表、X/Z 扫描
-- `schTraceDriver` / `schTraceFanIn` / `schTraceX`（设计库依赖未知）
-- `srcGetCaretFile` / source 窗口
-- NPI / FSDB Reader 无头查询
+- `schTrace2Signals`（两点 cone）、`schTraceReport`、SDF 延迟
+- FSDB Reader C API（`ffrAPI.h`）——NPI 已可用，暂未走这条
+- 完整 X/Z 扫描工具（GUI 逐点 3240 次查询超时；NPI 路径可用但未封装）
+- glitch / delta-cycle 完整性
 - SSH 远程
 - 多用户、跨机
-- 大 FSDB 性能与内存
+- 大 FSDB（GB 级）性能与内存
 - 多 agent 并发语义
 
 ---
 
 ## 9. 产物与复现
 
-**已归档（2026-10-17）**：源码、脚本与证据已从 `/tmp/opencode/verdi_poc/` 复制到仓库 `poc/`（见 `poc/README.md`）。
+**已归档（2026-10-17）**：源码、脚本与证据已从 `/tmp/opencode/verdi_poc/` 复制到仓库 `poc/`
+（原始 `/tmp` 副本可丢弃）。
 
 ```
 poc/
-├── cmdclient.c                    # 客户端
-├── build.sh                       # 编译（产物 cmdclient 不入库）
-├── run_poc.sh                     # 一键复现（自动起停、只杀自己的端口）
-├── verdi-session                  # 会话/端口管理
-├── FINDINGS.md                    # PoC 记录
+├── cmdclient.c / build.sh / run_poc.sh
+├── verdi-session
+├── FINDINGS.md
+├── scan_xz.py                     # X/Z 扫描原型（GUI 路径；prototype，非最终工具）
 └── evidence/
     ├── poc_output.txt             # 命令/事件输出
     ├── signals.txt                # 40 个信号
-    ├── nwave.png                  # GUI 截图
-    ├── clientA*.out / clientB*.out# 多 client 并发测试输出
-    └── multi*.log                 # 并发测试的 Verdi 日志
+    ├── nwave.png                  # nWave 截图
+    ├── nschema_x.png              # X 追踪 schematic 截图
+    ├── source_window.png          # 源码/层次/波形同屏截图
+    ├── tri.vcd / tri.vcd.fsdb     # 自制 X/Z 测试数据
+    ├── leafpin.rpt                # driver/load 报告
+    └── scan_out.txt               # scan_xz.py 的一次失败输出（缺 libnclt）
 ```
 
-复现：
+复现（原始 PoC）：
 
 ```bash
 cd poc
@@ -224,7 +425,9 @@ cd poc
 PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
 ```
 
-注意：`run_poc.sh` 会从 `$VERDI_HOME/demo` 复制测试数据；不归档 Synopsys demo 与编译产物。原始 `/tmp` 副本仍可丢弃。
+注意：`run_poc.sh` 会从 `$VERDI_HOME/demo` 复制测试数据；不归档 Synopsys demo 与编译产物。
+`scan_xz.py` 是原型：它需要 `poc/cmdclient` 与 `poc/evidence/signals.txt`，并在
+`LD_LIBRARY_PATH` 中带 `libnclt`；`scan_out.txt` 是未设置库路径时的失败记录，不代表能力结论。
 
 ---
 
@@ -237,111 +440,20 @@ PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
 | 事件回调 | ✅ 可用 |
 | 截图 | ✅ 可用 |
 | 会话/端口管理 | ✅ 可用 |
-| demo 全链路（VCS→FSDB→Verdi） | ✅ 可用（`demo/sync_fifo`） |
-| 值/跳变/X-Z | ⚠️ NPI 单点值 / X 已验证；GUI 工具未验证 |
-| 设计追踪/schematic/source | ❌ 未验证 |
-| 无头查询（NPI/FSDB Reader） | ✅ P0 可用（demo FSDB） |
+| 值/跳变/X-Z | ✅ 可用（GUI + NPI，X/Z 已验证） |
+| 设计追踪/schematic/source | ✅ 可用（driver/load/fan-in/X/source） |
+| 无头查询（NPI） | ✅ 可用（Verdi Python 3.8 + pynpi） |
+| 大 FSDB 扫描 | ⚠️ GUI 逐点太慢；NPI 可用，工具未封装 |
+| SSH / 多用户 | ❌ 未做 |
 | MCP 层 | ❌ 仅方案 |
 | Skills | ❌ 仅方案 |
 
 ---
 
-## 11. demo 实测（2026-10-17）
+## 11. 本仓库 demo / NPI 复现入口
 
-DUT / TB：`demo/rtl/sync_fifo.v` / `demo/tb/tb_sync_fifo.v`；场景见 `demo/README.md`。
-
-### 编译 + 仿真（VERIFIED）
-
-```bash
-cd demo/sim
-make clean
-make sim
-```
-
-结果：
-
-```
-[40.0 ns] OK: rd_data is X while empty (xx)
-TEST PASSED
-$finish at simulation time 240.0 ns
-```
-
-产物 `sync_fifo.fsdb` 9677 bytes。`synenv.sh` 会 source `/opt/synopsys/env.synopsys.rc`；
-VCS flags 对应 `.rc` 的 `vcscmd` alias。
-
-### Verdi + libnclt（VERIFIED）
-
-```bash
-make verdi-server PORT=11066
-# 另一 shell，经 libnclt：
-wvCreateWindow                                  -> 348634d0
-wvOpenFile -win 348634d0 .../sync_fifo.fsdb     -> path
-wvAddSignal -win 348634d0 <11 signals>          -> 1
-wvSetCursor -win 348634d0 40000                 -> 1
-wvGetFileTimeUnit -win 348634d0                 -> 1ps
-```
-
-截图：`demo/evidence/nwave.png`。
-
-### 注意
-
-- `-ssf` 不保证把 FSDB 绑到**新建**的 nWave 窗口；必须先对该窗口 `wvOpenFile`，否则
-  `wvAddSignal` 返回 0。
-- 文件时间单位是 **1ps**，40 ns 的游标值是 `40000`，不是 `40`。
-- demo 的空读 X 场景可直接作为 M3 值 / 跳变 / XZ 的回归输入。
-
----
-
-## 12. NPI 实测（2026-10-17，P0）
-
-脚本：`demo/npi/npi_smoke.py`；入口：`demo/npi/run_npi.sh`。
-
-```bash
-cd demo/npi
-./run_npi.sh                  # 默认读 ../sim/sync_fifo.fsdb
-```
-
-结果：
-
-```
-NPI SMOKE PASSED
-```
-
-### 环境
-
-- `/usr/bin/python3` **3.11.2**；`pynpi` 在 `$VERDI_HOME/share/NPI/python`，无需 pip。
-- `PYTHONPATH=$VERDI_HOME/share/NPI/python`
-- `LD_LIBRARY_PATH=$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib`
-  （否则 `libQt5Script.so.5` 缺失）
-- `npisys.init()` + `waveform.open()` 成功，license 无 checkout 错误。
-
-### 结果（demo FSDB）
-
-- `scale_unit=1ps`，`min/max=0/240000`
-- `tb_sync_fifo.rst_n @ 40ns` = `1`
-- `tb_sync_fifo.rd_data @ 40ns` = `XX`
-- `tb_sync_fifo.count @ 240ns` = `0`
-- `rd_data 0..50ns` = `[(0, 'XX')]`
-- `sig_find_x_backward(rd_data, 100ns)` = `(0, 'XX')`
-- `clk vc_count 0..240ns` = `49`
-
-### 耗时 / 内存
-
-短进程两次运行：
-
-| 阶段 | 耗时 |
-|---|---:|
-| `import pynpi` | 0.029 s |
-| `npisys.init()` | 3.03 s |
-| `waveform.open()` | 0.005–0.008 s |
-| 100× `sig_value_at` | 0.001–0.002 s |
-| `close` + `end` | 0.03–0.04 s |
-| **总计** | **~3.1 s** |
-| 峰值 RSS | **106 MB** |
-
-### 语义坑
-
-- `sig_find_x_forward(..., 0)` 找不到 time 0 的初始 X（初始值不是 value change）；
-  用 `sig_value_between()` 或 `sig_find_x_backward()`。
-- 3.1 s 主要花在 `npisys.init()`；如果 MCP 每次查询都起短进程，小查询会明显变慢。
-  常驻 Reader 是否值得，需要 P1 的批量查询数据。
+- `demo/`：`sync_fifo` 的 VCS → FSDB → Verdi/libnclt 全链路，见 `demo/README.md`；
+  证据 `demo/evidence/nwave.png`。
+- `demo/npi/`：`pynpi` 冒烟测试 `./run_npi.sh`，输出 `NPI SMOKE PASSED`；
+  证据 `demo/evidence/npi_smoke.log`、`npi_timing.log`。
+- 这两套是 M1/M3 的稳定回归输入；P1 批量性能仍待补。

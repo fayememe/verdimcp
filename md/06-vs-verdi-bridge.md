@@ -59,9 +59,9 @@ read_log, trace_driver, read_source, read_source_file, goto_source
 | Web API | 已写参考设计（590 行），未实现 |
 | MCP | 仅方案（22 个工具） |
 | Skills | 仅方案（5 个） |
-| 值/跳变/XZ | 未验证 |
-| 设计追踪/source | 未验证 |
-| 无头查询 | 未开始 |
+| 值/跳变/XZ | VERIFIED（GUI + 自制 VCD 验 Z） |
+| 设计追踪/source | VERIFIED（需 `-f` 设计库） |
+| 无头查询 | NPI VERIFIED（Python 3.8/3.11 + pynpi） |
 | 远程 | 未开始 |
 
 ---
@@ -74,10 +74,10 @@ read_log, trace_driver, read_source, read_source_file, goto_source
 | 传输 | 私有目录 + 原子请求/响应 | socket（loopback） | 平手（各有取舍） |
 | 远程 | ✅ SSH | ❌ | **对方** |
 | 工具语义 | 18 个，单位/区间/预算/X-Z 完整 | 0 个（方案 22 个） | **对方** |
-| 值/跳变查询 | ✅ 实测 | ❌ | **对方** |
+| 值/跳变查询 | ✅ 实测 | ✅ 实测（语义/预算不如对方） | 对方略优 |
 | 时钟采样 | ✅ `sample_on_clock` / `measure_clock` | ❌ | **对方** |
-| 大 FSDB | ✅ NPI，有性能数据 | ❌ | **对方** |
-| 源码/驱动 | ✅ `trace_driver` / `read_source` / `goto_source` | ❌ | **对方** |
+| 大 FSDB | ✅ NPI，有性能数据 | ⚠️ NPI 可用，未压测 | **对方** |
+| 源码/驱动 | ✅ `trace_driver` / `read_source` / `goto_source` | ✅ driver/load/source 已验证 | 对方略优 |
 | 截图/视觉证据 | ❌ | ✅ 已验证 | **我们** |
 | 会话/端口管理 | 按 GUI 目录，选择当前会话 | ✅ 自动分配 + 注册表 + 多会话 | **我们** |
 | 多 agent | 请求 ID 串行；多 Client 可并发提交 | ⚠️ 未证实，计划 broker | 对方略优 |

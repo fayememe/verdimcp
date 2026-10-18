@@ -58,8 +58,9 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 
 ### P0 实测（2026-10-17，VERIFIED）
 
-- **Python**：`/usr/bin/python3` **3.11.2**；`pynpi` 位于
-  `$VERDI_HOME/share/NPI/python`，可直接 import（无需 pip）。
+- **Python**：`/usr/bin/python3` **3.11.2** 可用；Verdi 自带的
+  `$VERDI_HOME/platform/linux64/python-3.8/bin/python3.8` 也可用（邻目录 session 实测）。
+  `pynpi` 位于 `$VERDI_HOME/share/NPI/python`，可直接 import（无需 pip）。
 - **环境**：需要 `PYTHONPATH=$VERDI_HOME/share/NPI/python`；还需要
   `LD_LIBRARY_PATH=$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib`，
   否则 `import pynpi` 会因 `libQt5Script.so.5` 缺失失败。
@@ -73,6 +74,9 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
   - `rd_data 0..50ns` = `[(0, 'XX')]`
   - `sig_find_x_backward(rd_data, 100ns)` = `(0, 'XX')`
   - `clk vc_count 0..240ns` = `49`
+  - 自制 `tri.vcd.fsdb`：`t.y` = `x/0/z/1`，`t.d[7:0] @20ns` = `zzzzzzzz`
+- **命名规则**：NPI 用点分隔且**不带前导斜杠**（`system.data[7:0]`）；
+  `/system/data[7:0]` 会失败。GUI 命令则用 `/` 分隔。
 - **耗时 / 内存**（两次运行，短进程）：
 
   | 阶段 | 耗时 |
@@ -89,8 +93,10 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
   输出 `demo/evidence/npi_smoke.log`、计时 `demo/evidence/npi_timing.log`。
 - **语义坑**：`sig_find_x_forward(..., 0)` 找不到 time 0 的初始 X（初始值不是 value change）；
   用 `sig_value_between()` 或 `sig_find_x_backward()`。
-- **尚未做（P1）**：信号/层级列表 dump、128 signals × 8 timestamps、GUI/libnclt 对比、
-  大 FSDB、正在写入的 FSDB、并发 worker。
+- **GUI vs NPI**（邻目录实测）：GUI `wvGetSigValueByTime` 20 次约 4.4 s（~0.22 s/次）；
+  NPI 同一进程内 100 次 < 0.01 s。结论：大范围扫描走 NPI，GUI 只做少量交互查询。
+- **尚未做（P1）**：信号/层级列表 dump、128 signals × 8 timestamps、大 FSDB、
+  正在写入的 FSDB、并发 worker。
 
 **P1：性能与语义**
 - 小查询（1–4 signals × 少量 timestamps）、中等查询（128 signals × 8 timestamps）、长区间 transition count、clock sampling。

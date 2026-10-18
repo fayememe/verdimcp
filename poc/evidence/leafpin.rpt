@@ -1,0 +1,3 @@
+system.i_cpu.CPU(@1):SigOp1:67:67:Combo.I1
+system.i_pram.pram:Always0:38:43:ComboMemory_macroram[255:0].IH_R_W
+system.i_pram.pram:SigOp0:36:36:Combo.I1
