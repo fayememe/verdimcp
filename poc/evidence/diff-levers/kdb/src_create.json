@@ -1,0 +1,3 @@
+{"type":"connect","ok":true,"port":11494}
+{"type":"result","ok":true,"command":"srcCreateWindow -scope {tb_sync_fifo}","result":"4921c7a0"}
+{"type":"event","cmd_index":0,"event":"srcHBTreeSelect","data":"{ 1 {tb_sync_fifo} false}"}

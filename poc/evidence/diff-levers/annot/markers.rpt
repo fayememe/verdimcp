@@ -1,0 +1,6 @@
+
+User Marker Report:
+Reference	Hidden	Name              	Time      	Delta to Cursor	Delta to Marker	Delta to Ref.	Color   	Line Style
+N     	N     	agent_m2          	80000     	40000     	80000     	40000     	ID_RED3 	long_dashed
+N     	N     	agent_m1          	40000     	0         	40000     	0         	ID_YELLOW8	long_dashed
+

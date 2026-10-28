@@ -1,0 +1,3 @@
+session 77037dc2  port 11724  pid 3168208  display localhost:10.0
+label   big
+attach  verdi-session exec 77037dc2 'wvGetAllWindows'

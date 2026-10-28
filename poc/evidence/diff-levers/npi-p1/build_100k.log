@@ -1,0 +1,84 @@
+make: Entering directory '/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb'
+python3 gen_tb.py > tb_big.v
+../sim/synenv.sh vcs -full64 -sverilog -debug_access+all -Mupdate -j16 -LDFLAGS -Wl,--no-as-needed tb_big.v -l compile.log
+                         Chronologic VCS (TM)
+       Version W-2024.09-SP1_Full64 -- Sun Oct 18 04:47:04 2026
+
+                    Copyright (c) 1991 - 2024 Synopsys, Inc.
+   This software and the associated documentation are proprietary to Synopsys,
+ Inc. This software may only be used in accordance with the terms and conditions
+ of a written license agreement with Synopsys, Inc. All other use, reproduction,
+   or distribution of this software is strictly prohibited.  Licensed Products
+     communicate with Synopsys servers for the purpose of providing software
+    updates, detecting software piracy and verifying that customers are using
+    Licensed Products in conformity with the applicable License Key for such
+  Licensed Products. Synopsys will use information gathered in connection with
+    this process to deliver software updates and pursue software pirates and
+                                   infringers.
+
+ Inclusivity & Diversity - Visit SolvNetPlus to read the "Synopsys Statement on
+            Inclusivity and Diversity" (Refer to article 000036315 at
+                        https://solvnetplus.synopsys.com)
+
+Parsing design file 'tb_big.v'
+Top Level Modules:
+       tb_big
+TimeScale is 1 ns / 1 ps
+Starting vcs inline pass...
+
+Note-[VCS_PARAL] Parallel code-gen enabled
+  VCS is running with parallel code generation(-j)...
+
+1 module and 0 UDP read.
+recompiling module tb_big
+make[1]: Entering directory '/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb/csrc'
+rm -f _cuarc*.so _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
+if [ -x ../simv ]; then chmod a-x ../simv; fi
+g++  -o ../simv   -no-pie    -Wl,--no-as-needed -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/opt/synopsys/vcs/W-2024.09-SP1/linux64/lib -L/opt/synopsys/vcs/W-2024.09-SP1/linux64/lib  -z noexecstack  -Wl,-rpath-link=./   objs/amcQw_d.o  _3161662_archive_1.so _3161731_archive_1.so  SIM_l.o       rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o            -lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /opt/synopsys/vcs/W-2024.09-SP1/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive       _vcs_pli_stub_.o   /opt/synopsys/vcs/W-2024.09-SP1/linux64/lib/vcs_save_restore_new.o /opt/synopsys/verdi/W-2024.09-SP1/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm -lpthread -ldl 
+../simv up to date
+make[1]: Leaving directory '/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb/csrc'
+CPU time: .704 seconds to compile + .510 seconds to elab + .238 seconds to link
+./simv +cycles=100000 | tee sim.log
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2024
+Contains Synopsys proprietary information.
+Compiler version W-2024.09-SP1_Full64; Runtime version W-2024.09-SP1_Full64;  Oct 18 04:47 2026
+*Verdi* Loading libsscore_vcs202409.so
+FSDB Dumper for VCS, Release Verdi_W-2024.09-SP1, Linux x86_64/64bit, 11/30/2024
+(C) 1996 - 2024 by Synopsys, Inc.
+*Verdi* : Create FSDB file 'big.fsdb'
+*Verdi* : Begin traversing the scope (tb_big), layer (0).
+*Verdi* : End of traversing.
+$finish called from file "tb_big.v", line 267.
+$finish at simulation time             99999500
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 99999500 ps
+CPU Time:      1.770 seconds;       Data structure size:   0.0Mb
+Sun Oct 18 04:47:11 2026
+ls -lh big.fsdb
+-rw-r--r-- 1 faye faye 430K Oct 18 04:47 big.fsdb
+make: Leaving directory '/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb'
+	Command being timed: "make -C demo/bigfsdb CYCLES=100000"
+	User time (seconds): 2.74
+	System time (seconds): 1.00
+	Percent of CPU this job got: 45%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.28
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 345540
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 285278
+	Voluntary context switches: 1805
+	Involuntary context switches: 118
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 9640
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

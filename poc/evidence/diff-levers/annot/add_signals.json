@@ -1,0 +1,4 @@
+{"type":"connect","ok":true,"port":11456}
+{"type":"result","ok":true,"command":"wvAddSignal -win 569d8a00 /tb_sync_fifo/clk /tb_sync_fifo/rst_n {/tb_sync_fifo/rd_data[7:0]}","result":"1"}
+{"type":"event","cmd_index":0,"event":"wvAddSignal","data":"/ 3 {/tb_sync_fifo/clk} {/tb_sync_fifo/rst_n} {/tb_sync_fifo/rd_data[7:0]}"}
+{"type":"event","cmd_index":0,"event":"wvAddSignalByIdCode","data":"-idcode 3 {1 2 8}"}

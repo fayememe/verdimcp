@@ -1,0 +1,66 @@
+{
+  "started": "2026-10-28T04:28:41.015Z",
+  "argv": [
+    "ssh",
+    "-p",
+    "2222",
+    "-i",
+    "/tmp/opencode/sshtest/clientkey",
+    "-o",
+    "StrictHostKeyChecking=no",
+    "-o",
+    "UserKnownHostsFile=/dev/null",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "LogLevel=ERROR",
+    "-T",
+    "faye@127.0.0.1",
+    "/home/faye/.bun/bin/bun",
+    "run",
+    "/home/faye/mydrv/aiwork/verdimcp/mcp/src/server.ts"
+  ],
+  "checks": [
+    {
+      "name": "remote.handshake",
+      "passed": true,
+      "detail": {
+        "connect_ms": 294
+      }
+    },
+    {
+      "name": "remote.tools_listed",
+      "passed": true,
+      "detail": {
+        "count": 37
+      }
+    },
+    {
+      "name": "remote.has_capabilities",
+      "passed": true
+    },
+    {
+      "name": "remote.has_session_start",
+      "passed": true
+    },
+    {
+      "name": "remote.capabilities_ok",
+      "passed": true,
+      "detail": {
+        "call_ms": 5
+      }
+    },
+    {
+      "name": "remote.gui_engine",
+      "passed": true
+    },
+    {
+      "name": "remote.sessions_list_ok",
+      "passed": true,
+      "detail": {
+        "count": 1
+      }
+    }
+  ],
+  "ok": true
+}

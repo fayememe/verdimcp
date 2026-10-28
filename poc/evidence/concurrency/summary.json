@@ -1,0 +1,10 @@
+{
+  "session_id": "55171e58",
+  "workers": 4,
+  "rounds": 15,
+  "calls": 60,
+  "mismatched_results": 0,
+  "busy_rc": 75,
+  "waited_rc": 0,
+  "ok": true
+}

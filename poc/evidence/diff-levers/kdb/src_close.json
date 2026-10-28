@@ -1,0 +1,2 @@
+{"type":"connect","ok":true,"port":11494}
+{"type":"result","ok":true,"command":"srcCloseWindow -win 4921c7a0","result":"0"}

@@ -1,0 +1,2 @@
+{"type":"connect","ok":true,"port":11456}
+{"type":"result","ok":true,"command":"verdiHighlightSignal -sigColor {\"/tb_sync_fifo/clk\" ID_BLUE3} -apply","result":"1"}

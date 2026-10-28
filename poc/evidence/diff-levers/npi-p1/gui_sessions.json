@@ -1,0 +1,28 @@
+[
+  {
+    "id": "77037dc2",
+    "pid": 3168208,
+    "port": 11724,
+    "uid": 1000,
+    "host": "f29",
+    "started": "2026-10-18T04:51:20-07:00",
+    "cwd": "/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb",
+    "label": "big",
+    "verdi": "/opt/synopsys/verdi/W-2024.09-SP1",
+    "display": "localhost:10.0",
+    "cmd": [
+      "/opt/synopsys/verdi/W-2024.09-SP1/bin/verdi",
+      "-serverPort",
+      "11724",
+      "-ssf",
+      "/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb/big.fsdb",
+      "-nologo"
+    ],
+    "fsdb": [
+      "/home/faye/mydrv/aiwork/verdimcp/demo/bigfsdb/big.fsdb"
+    ],
+    "design": [],
+    "status": "up",
+    "state": "up"
+  }
+]

@@ -1,0 +1,3 @@
+{"type":"connect","ok":true,"port":11494}
+{"type":"result","ok":true,"command":"schCloseWindow -win 4d2544a0","result":"1"}
+{"type":"event","cmd_index":0,"event":"schCloseWindow","data":"4d2544a0"}

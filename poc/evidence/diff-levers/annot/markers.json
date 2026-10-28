@@ -1,0 +1,11 @@
+{"type":"connect","ok":true,"port":11456}
+{"type":"result","ok":true,"command":"wvSetMarker -win 569d8a00 -name agent_m1 40000 ID_YELLOW8 solid","result":"1"}
+{"type":"event","cmd_index":0,"event":"wvAddMarker","data":"\"agent_m1\" 40000.000"}
+{"type":"event","cmd_index":0,"event":"wvViewRangeChanged","data":"27880.000000 52120.000000"}
+{"type":"result","ok":true,"command":"wvSetMarker -win 569d8a00 -name agent_m2 80000 ID_RED3 dashed","result":"1"}
+{"type":"event","cmd_index":1,"event":"wvAddMarker","data":"\"agent_m2\" 80000.000"}
+{"type":"event","cmd_index":1,"event":"wvViewRangeChanged","data":"67880.000000 92120.000000"}
+{"type":"result","ok":true,"command":"wvSetMarkerOption -win 569d8a00 -absolute on -relative on","result":"1"}
+{"type":"result","ok":true,"command":"wvGetMarker -win 569d8a00","result":"1 0 x 1ps"}
+{"type":"result","ok":true,"command":"wvReportMarker -win 569d8a00 -toFile /home/faye/mydrv/aiwork/verdimcp/poc/evidence/diff-levers/annot/markers.rpt","result":"1"}
+{"type":"event","cmd_index":4,"event":"guiXMap","data":"-xid 0x2a005d4"}

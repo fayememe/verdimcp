@@ -1,0 +1,40 @@
+{
+  "samples": 9,
+  "during_simulation": 8,
+  "opened_while_writing": 8,
+  "query_failures": 0,
+  "max_time_ticks": [
+    424960500,
+    1958912500,
+    3061760500,
+    4168704500,
+    5718016500,
+    6802432500,
+    7897088500,
+    9470976500,
+    14999999500
+  ],
+  "is_completed": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true
+  ],
+  "fsdb_bytes": [
+    40497,
+    4600178,
+    7883824,
+    11160285,
+    15794843,
+    19024307,
+    22286038,
+    26990479,
+    45893409
+  ],
+  "ok": true
+}

@@ -1,0 +1,803 @@
+{
+  "started": "2026-10-28T04:30:29.798Z",
+  "checks": [
+    {
+      "name": "tool:verdi_capabilities",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_sessions_list",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_session_info",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_session_start",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_session_stop",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_windows_list",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_window_create",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_window_raise",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_window_screenshot",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_fsdb_open",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_signals_list",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_signals_add",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_signals_remove",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_cursor_set",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_value_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_transitions_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_xz_scan",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_scopes_list",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_drivers_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_fanin_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_fanout_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_source_get",
+      "passed": true
+    },
+    {
+      "name": "tool:verdi_tcl_exec",
+      "passed": true
+    },
+    {
+      "name": "capabilities.ok",
+      "passed": true
+    },
+    {
+      "name": "capabilities.npi",
+      "passed": true
+    },
+    {
+      "name": "sessions.ok",
+      "passed": true
+    },
+    {
+      "name": "sessions.has_up",
+      "passed": true,
+      "detail": {
+        "sid": "55171e58",
+        "count": 2
+      }
+    },
+    {
+      "name": "session_info.ok",
+      "passed": true
+    },
+    {
+      "name": "windows_list.ok",
+      "passed": true
+    },
+    {
+      "name": "window_create.ok",
+      "passed": true
+    },
+    {
+      "name": "screenshot.ok",
+      "passed": true
+    },
+    {
+      "name": "screenshot.file",
+      "passed": true,
+      "detail": {
+        "path": "/home/faye/.local/state/verdi-mcp/screenshots/55171e58-4bf08700-1793161852044.png",
+        "width": 2560,
+        "height": 615,
+        "bytes": 22775,
+        "sha256": "a64bf6e8667acd0d12478d46c9097d97eec679c3e2eea1a6912d547f1d60d7ff",
+        "xid": "0x2e0054d"
+      }
+    },
+    {
+      "name": "screenshot.bytes",
+      "passed": true,
+      "detail": {
+        "path": "/home/faye/.local/state/verdi-mcp/screenshots/55171e58-4bf08700-1793161852044.png",
+        "width": 2560,
+        "height": 615,
+        "bytes": 22775,
+        "sha256": "a64bf6e8667acd0d12478d46c9097d97eec679c3e2eea1a6912d547f1d60d7ff",
+        "xid": "0x2e0054d"
+      }
+    },
+    {
+      "name": "screenshot.inline_image",
+      "passed": true
+    },
+    {
+      "name": "fsdb_open.ok",
+      "passed": true,
+      "detail": {
+        "path": "/home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb",
+        "time_unit": "1ps",
+        "requested_unit": null
+      }
+    },
+    {
+      "name": "signals_list.ok",
+      "passed": true
+    },
+    {
+      "name": "signals_list.nonempty",
+      "passed": true,
+      "detail": {
+        "count": 29
+      }
+    },
+    {
+      "name": "signals.have_clk",
+      "passed": true,
+      "detail": [
+        "/tb_sync_fifo/clk",
+        "/tb_sync_fifo/count[2:0]",
+        "/tb_sync_fifo/empty",
+        "/tb_sync_fifo/errors[31:0]",
+        "/tb_sync_fifo/full",
+        "/tb_sync_fifo/rd_capture[7:0]",
+        "/tb_sync_fifo/rd_data[7:0]",
+        "/tb_sync_fifo/rd_ready",
+        "/tb_sync_fifo/rd_valid",
+        "/tb_sync_fifo/rst_n"
+      ]
+    },
+    {
+      "name": "signals.have_rst",
+      "passed": true
+    },
+    {
+      "name": "signals.have_rd",
+      "passed": true
+    },
+    {
+      "name": "signals_add.ok",
+      "passed": true
+    },
+    {
+      "name": "signals_remove.ok",
+      "passed": true,
+      "detail": {
+        "requested": [
+          "/tb_sync_fifo/rd_data[7:0]"
+        ],
+        "ok": true,
+        "result": "1"
+      }
+    },
+    {
+      "name": "signals_readd.ok",
+      "passed": true
+    },
+    {
+      "name": "cursor_set.ok",
+      "passed": true,
+      "detail": {
+        "time": 40000,
+        "unit": "ps",
+        "mode": "time"
+      }
+    },
+    {
+      "name": "value_get.ok",
+      "passed": true
+    },
+    {
+      "name": "value_get.rst_1",
+      "passed": true,
+      "detail": {
+        "signal": "/tb_sync_fifo/rst_n",
+        "value": "1"
+      }
+    },
+    {
+      "name": "value_get.current_ok",
+      "passed": true,
+      "detail": {
+        "signal": "/tb_sync_fifo/rst_n",
+        "time": null,
+        "value": "1",
+        "unit": "ps",
+        "source": "gui"
+      }
+    },
+    {
+      "name": "transitions.ok",
+      "passed": true
+    },
+    {
+      "name": "transitions.nonempty",
+      "passed": true
+    },
+    {
+      "name": "transitions.gui_ok",
+      "passed": true,
+      "detail": {
+        "signal": "/tb_sync_fifo/rst_n",
+        "transitions": [
+          {
+            "time": 30
+          }
+        ],
+        "truncated": false,
+        "values_truncated": false,
+        "source": "gui",
+        "unit": "ns"
+      }
+    },
+    {
+      "name": "xz_scan.ok",
+      "passed": true
+    },
+    {
+      "name": "xz_scan.has_x",
+      "passed": true,
+      "detail": {
+        "candidates": [
+          {
+            "signal": "tb_sync_fifo.rd_data[7:0]",
+            "time": 0,
+            "value": "XX"
+          }
+        ],
+        "truncated": false,
+        "source": "npi",
+        "unit": "ns",
+        "signals_scanned": 1
+      }
+    },
+    {
+      "name": "scopes_list.ok",
+      "passed": true
+    },
+    {
+      "name": "drivers.ok_or_not_supported",
+      "passed": true
+    },
+    {
+      "name": "verdi_fanin_get.ok_or_not_supported",
+      "passed": true
+    },
+    {
+      "name": "verdi_fanout_get.ok_or_not_supported",
+      "passed": true
+    },
+    {
+      "name": "window_raise.ok",
+      "passed": true
+    },
+    {
+      "name": "tcl_exec.disabled_by_default",
+      "passed": true,
+      "detail": {
+        "code": "not_supported",
+        "message": "raw Tcl is disabled",
+        "details": {
+          "hint": "start the MCP server with VERDI_ALLOW_RAW=1 to enable verdi_tcl_exec"
+        }
+      }
+    },
+    {
+      "name": "drivers.levels2_ok_or_not_supported",
+      "passed": true
+    },
+    {
+      "name": "source_get.signal_ok_or_not_supported",
+      "passed": true
+    },
+    {
+      "name": "source_get.file",
+      "passed": true
+    },
+    {
+      "name": "source_get.snippet",
+      "passed": true
+    },
+    {
+      "name": "signals.have_wr",
+      "passed": true
+    },
+    {
+      "name": "signal_map_put.ok",
+      "passed": true
+    },
+    {
+      "name": "signal_map_get.ok",
+      "passed": true
+    },
+    {
+      "name": "signal_map_list.ok",
+      "passed": true
+    },
+    {
+      "name": "handshake_beats.ok",
+      "passed": true,
+      "detail": {
+        "channel": "wr",
+        "beats": [
+          {
+            "time": 55,
+            "valid": "1",
+            "ready": "1",
+            "data": {
+              "/tb_sync_fifo/wr_data[7:0]": "a1"
+            }
+          },
+          {
+            "time": 75,
+            "valid": "1",
+            "ready": "1",
+            "data": {
+              "/tb_sync_fifo/wr_data[7:0]": "a2"
+            }
+          },
+          {
+            "time": 95,
+            "valid": "1",
+            "ready": "1",
+            "data": {
+              "/tb_sync_fifo/wr_data[7:0]": "a3"
+            }
+          },
+          {
+            "time": 195,
+            "valid": "1",
+            "ready": "1",
+            "data": {
+              "/tb_sync_fifo/wr_data[7:0]": "b1"
+            }
+          }
+        ],
+        "truncated": false,
+        "source": "npi"
+      }
+    },
+    {
+      "name": "change_stats.ok",
+      "passed": true
+    },
+    {
+      "name": "change_stats.rows",
+      "passed": true,
+      "detail": {
+        "stats": [
+          {
+            "signal": "tb_sync_fifo.clk",
+            "count": 49,
+            "first_value": "0",
+            "last_value": "0"
+          },
+          {
+            "signal": "tb_sync_fifo.rst_n",
+            "count": 2,
+            "first_value": "0",
+            "last_value": "1"
+          },
+          {
+            "signal": "tb_sync_fifo.rd_data[7:0]",
+            "count": 7,
+            "first_value": "XX",
+            "last_value": "a2"
+          }
+        ],
+        "scale_unit": "1ps",
+        "source": "npi"
+      }
+    },
+    {
+      "name": "window_scan.ok",
+      "passed": true,
+      "detail": {
+        "predicate": "/tb_sync_fifo/wr_valid && !/tb_sync_fifo/wr_ready",
+        "hits": [
+          {
+            "time": 115.4308617234469,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 115.91182364729458,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 116.39278557114228,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 116.87374749498997,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 117.35470941883767,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 117.83567134268537,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 118.31663326653306,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 118.79759519038076,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 119.27855711422845,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 119.75951903807615,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 130.34068136272543,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 130.82164328657313,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 131.30260521042084,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 131.78356713426854,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 132.26452905811624,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 132.7454909819639,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 133.2264529058116,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 133.7074148296593,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 134.18837675350701,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          },
+          {
+            "time": 134.66933867735472,
+            "values": {
+              "/tb_sync_fifo/wr_valid": "1",
+              "/tb_sync_fifo/wr_ready": "0"
+            }
+          }
+        ],
+        "truncated": true,
+        "bins": 500,
+        "step": 0.48096192384769537,
+        "source": "npi"
+      }
+    },
+    {
+      "name": "check_define.ok",
+      "passed": true
+    },
+    {
+      "name": "check_run.ok",
+      "passed": true,
+      "detail": {
+        "check_id": "a41025a1-dd61-4d22-b73c-f4e5fe697f81",
+        "name": "wr_stall",
+        "result": {
+          "predicate": "/tb_sync_fifo/wr_valid && !/tb_sync_fifo/wr_ready",
+          "hits": [
+            {
+              "time": 115.4308617234469,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 115.91182364729458,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 116.39278557114228,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 116.87374749498997,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 117.35470941883767,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 117.83567134268537,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 118.31663326653306,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 118.79759519038076,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 119.27855711422845,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 119.75951903807615,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 130.34068136272543,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 130.82164328657313,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 131.30260521042084,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 131.78356713426854,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 132.26452905811624,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 132.7454909819639,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 133.2264529058116,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 133.7074148296593,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 134.18837675350701,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            },
+            {
+              "time": 134.66933867735472,
+              "values": {
+                "/tb_sync_fifo/wr_valid": "1",
+                "/tb_sync_fifo/wr_ready": "0"
+              }
+            }
+          ],
+          "truncated": true,
+          "bins": 500,
+          "step": 0.48096192384769537,
+          "source": "npi"
+        }
+      }
+    },
+    {
+      "name": "evidence_create.ok",
+      "passed": true
+    },
+    {
+      "name": "capture_annotate.ok",
+      "passed": true
+    },
+    {
+      "name": "capture_annotate.file",
+      "passed": true,
+      "detail": "/home/faye/.local/state/verdi-mcp/screenshots/55171e58-4bf08700-1793161921442.png"
+    },
+    {
+      "name": "waveform_render.ok",
+      "passed": true
+    },
+    {
+      "name": "waveform_render.file",
+      "passed": true,
+      "detail": "/home/faye/.local/state/verdi-mcp/evidence/render-8070edfb-281b-4c0f-803e-882adf8e248a.png"
+    },
+    {
+      "name": "evidence_add.ok",
+      "passed": true
+    },
+    {
+      "name": "evidence_report.ok",
+      "passed": true
+    },
+    {
+      "name": "evidence_report.file",
+      "passed": true,
+      "detail": "/home/faye/.local/state/verdi-mcp/evidence/report-e5294521-a15c-41ef-b815-7ccc8d25d9aa.md"
+    },
+    {
+      "name": "evidence_compare.ok",
+      "passed": true
+    },
+    {
+      "name": "evidence_compare.file",
+      "passed": true,
+      "detail": "/home/faye/.local/state/verdi-mcp/evidence/compare-a6956a56-9dc1-4e9f-896d-eec6ff24069b.png"
+    },
+    {
+      "name": "all_checks",
+      "passed": true
+    }
+  ],
+  "finished": "2026-10-28T04:32:35.503Z",
+  "ok": true
+}

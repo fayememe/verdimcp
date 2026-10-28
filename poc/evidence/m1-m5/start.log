@@ -1,0 +1,3 @@
+session dab37a72  port 11710  pid 1115478  display localhost:10.0
+label   acceptance
+attach  verdi-session exec dab37a72 'wvGetAllWindows'
