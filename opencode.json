@@ -1,4 +1,15 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["progress.md", "md/README.md"]
+  "instructions": ["progress.md", "md/README.md"],
+  "mcp": {
+    "verdi": {
+      "type": "local",
+      "command": [
+        "/home/faye/.bun/bin/bun",
+        "run",
+        "/home/faye/mydrv/aiwork/verdimcp/mcp/src/server.ts"
+      ],
+      "enabled": true
+    }
+  }
 }
