@@ -18,7 +18,7 @@
   - `levels>1`：**VERIFIED NEGATIVE**（`*ByLevel` 结果无法 dump 叶子引脚，只给 `cone_paths`）
 - **运行时**：Bun + `@modelcontextprotocol/sdk` 1.32.1 + zod 4.6.7；审计 `~/.local/state/verdi-mcp/audit.jsonl`。
 - **demo**：`demo/sim`（sync_fifo）、`demo/bigfsdb`（903 MB 生成器）、`demo/writing`（长时间写入 FSDB）、`demo/npi`。
-- **未提交**：v2 的代码与文档（本次 session 将按逻辑单元 commit）。
+- **已提交并推送**：`64b5386` → `origin/main`（6 个逻辑提交：bin / mcp / skills / demo / scripts / docs+evidence）。
 
 ## 2. 研发计划（checklist）
 
@@ -49,12 +49,12 @@
 4. **远程 GUI 环境**：ssh 非交互 shell 无 `DISPLAY`；用 `~/.ssh/environment` 或 `verdi_session_start({display})`。
 5. **无 broker**：并发靠 per-session `flock`；公平性/排队可观测性未做（非阻塞）。
 6. **未被验证的机器上会话**：f29 上有 3 个他人的 Novas GUI（无 `-serverPort`），按红线从不触碰。
-7. **未 commit**：v2 改动仍在工作区，本次 session 收尾时提交。
+7. ~~未 commit~~ → 已提交并推送（`64b5386`）。
 
 ## 4. NEXT（下一步）
 
 1. **重载 opencode**，确认 37 个工具可见；用真实会话跑一次 v2 工具。
-2. **commit + push**（按逻辑单元拆分：tools / npi / scripts / docs / evidence）。
+2. ~~commit + push~~ → 已完成（`64b5386`）。
 3. **真实 RTL bug 工作流**：signal map → handshake beats → window scan → check define/run → evidence report。
 4. 视需要：`-dbdir` fan-in、>16 信号渲染、broker。
 
@@ -68,4 +68,5 @@
   - `levels>1` 拿不到叶子引脚（negative，已记录）。
 - **证据目录**：`poc/evidence/{m1-m5,lifecycle,concurrency,remote,writing-fsdb,diff-levers}`。
 - **有用资料**：`$VERDI_HOME/etc/verdiTcl/linux64/verdi_tcl.db`（SQLite，Verdi Tcl 官方参数 schema）。
+- **提交**：6 个逻辑提交，`15b5573..64b5386` 已推送 `origin/main`。
 - **下个 session 接手**：先读本文件 §4，再读 `md/08-implementation-status.md` §v2。
