@@ -12,12 +12,12 @@ FSDB        ?= sync_fifo.fsdb
 PORT        ?= 11066
 VCS_FLAGS   ?= -Mupdate -full64 -fgp -j16 -sverilog +v2k +define+SIM +define+FSDB \
                +incdir+/work/common/rtl/ +lint=TFIPC-L +lint=PCWM \
-               -debug_acc+dmptf -debug_region+cell+encrypt \
+               -debug_access+all -debug_region+cell+encrypt -kdb \
                -LDFLAGS -Wl,--no-as-needed
 VERDI_FLAGS ?= --full64 +define+SIM +incdir+/work/common/rtl/ -sv
 DISPLAY_DEFAULT ?= localhost:10.0
 
-.PHONY: all compile sim verdi verdi-server clean
+.PHONY: all compile sim verdi verdi-dbdir verdi-server verdi-dbdir-server clean
 
 all: sim
 
@@ -38,6 +38,15 @@ verdi:
 verdi-server:
 	DISPLAY=$${DISPLAY:-$(DISPLAY_DEFAULT)} XAUTHORITY=$${XAUTHORITY:-$$HOME/.Xauthority} \
 		$(VERDI) $(VERDI_FLAGS) -f filelist.f -ssf $(FSDB) -serverPort $(PORT)
+
+# Open the VCS-generated KDB (requires -kdb at compile time) instead of re-elaborating sources.
+verdi-dbdir:
+	DISPLAY=$${DISPLAY:-$(DISPLAY_DEFAULT)} XAUTHORITY=$${XAUTHORITY:-$$HOME/.Xauthority} \
+		$(VERDI) $(VERDI_FLAGS) -dbdir $(SIMV).daidir -ssf $(FSDB)
+
+verdi-dbdir-server:
+	DISPLAY=$${DISPLAY:-$(DISPLAY_DEFAULT)} XAUTHORITY=$${XAUTHORITY:-$$HOME/.Xauthority} \
+		$(VERDI) $(VERDI_FLAGS) -dbdir $(SIMV).daidir -ssf $(FSDB) -serverPort $(PORT)
 
 clean:
 	rm -rf $(SIMV) $(SIMV).daidir csrc ucli.key compile.log *.fsdb *.vpd *.log
