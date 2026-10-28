@@ -1,6 +1,6 @@
 # Verdi MCP 整体架构设计
 
-> 2026-10-17 · v0.1 · 方案草案，基于已验证的 libnclt PoC
+> 2026-10-17 · v0.1 · 方案草案，基于已验证的 libnclt PoC；M0–M5 已实现，见 `08-implementation-status.md`
 
 ## 目标
 

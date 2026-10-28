@@ -441,12 +441,12 @@ PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
 | 截图 | ✅ 可用 |
 | 会话/端口管理 | ✅ 可用 |
 | 值/跳变/X-Z | ✅ 可用（GUI + NPI，X/Z 已验证） |
-| 设计追踪/schematic/source | ✅ 可用（driver/load/fan-in/X/source） |
+| 设计追踪/schematic/source | ✅ 可用（driver/load/fan-in/X/source；`-f` 与 `-dbdir` 均验证） |
 | 无头查询（NPI） | ✅ 可用（Verdi Python 3.8 + pynpi） |
-| 大 FSDB 扫描 | ⚠️ GUI 逐点太慢；NPI 可用，工具未封装 |
+| 大 FSDB 扫描 | ⚠️ 903 MB/128 信号：NPI 全窗渲染 30.6 s，GUI 27.0 s（同窗口 9.7 s）；headless 范围需收窄 |
 | SSH / 多用户 | ❌ 未做 |
-| MCP 层 | ❌ 仅方案 |
-| Skills | ❌ 仅方案 |
+| MCP 层 | ✅ M1–M5 已实现（19 工具） |
+| Skills | ✅ 5 个已实现 |
 
 ---
 
@@ -456,4 +456,69 @@ PORT=11066 DISPLAY=localhost:10.0 XAUTHORITY=$HOME/.Xauthority ./run_poc.sh
   证据 `demo/evidence/nwave.png`。
 - `demo/npi/`：`pynpi` 冒烟测试 `./run_npi.sh`，输出 `NPI SMOKE PASSED`；
   证据 `demo/evidence/npi_smoke.log`、`npi_timing.log`。
-- 这两套是 M1/M3 的稳定回归输入；P1 批量性能仍待补。
+- 这两套是 M1/M3 的稳定回归输入；P1 批量性能见 §12。
+
+---
+
+## 12. 差异化前提验证（2026-10-18）
+
+| 前提 | 结论 | 证据 |
+|---|---|---|
+| `-kdb` + `-dbdir` design-trace | ✅ VERIFIED（需 `VCS_HOME`；fan-in 不能 leafpin dump） | `poc/evidence/diff-levers/kdb/` |
+| Verdi 原生标注可脚本化 | ✅ VERIFIED（marker / comment box / signal highlight） | `poc/evidence/diff-levers/annot/` |
+| Protocol Analyzer 命令面 | ✅ 命令存在；解码 NOT_TESTED | `annot/protocol_probe.json` |
+| NPI P1 headless 渲染 | ❌ 前提被推翻（NPI 30.6 s vs GUI 27.0 s；同窗口 9.7 s；RSS ~8 GB） | `poc/evidence/diff-levers/npi-p1/` |
+
+详细分析见 `md/04-npi-research.md` §P1、`md/10-visual-evidence.md` §8、`md/11-domain-skills.md` §5。
+
+---
+
+## 13. v2 实测（2026-10-27）
+
+环境：f29，Verdi W-2024.09-SP1，opencode 1.18.23，`DISPLAY=localhost:10.0`。
+所有会话均由本项目 `verdi-session` 启动（`-serverPort`），未触碰机器上其他用户的 3 个无端口 Novas 进程。
+
+### 13A. 会话生命周期（MCP 侧）✅ VERIFIED
+
+- `verdi_session_start`（label `mcp-lifecycle`，`-f demo/sim/filelist.f -top tb_sync_fifo -ssf demo/sim/sync_fifo.fsdb`）：
+  **31.4 s**（含 10 s settle），自动分配 port 11617。
+- `verdi_session_info` / `verdi_windows_list` / `verdi_window_raise` 均成功；raise 1.2 s。
+- `verdi_session_stop`：**0.6 s**，registry 条目删除，进程消失。
+- 证据：`poc/evidence/lifecycle/`（`lifecycle.log`、`summary.json`）。
+- 注：ACP 会话本身没有 `DISPLAY`；`verdi_session_start` 在缺省时用 `localhost:10.0`，也可显式传 `display`。
+
+### 13B. 并发语义 ✅ VERIFIED
+
+- 4 个 worker × 15 轮 = **60 次并发** `verdi-session exec`（Tcl `expr {<unique>}`）：结果全部与请求一致，**0 次错配**。
+- 长命令持锁时，第二个 exec `--lock-timeout 0.2` → **rc=75 + `{"code":"busy"}`**。
+- 第二个 exec `--lock-timeout 30` 在锁释放后成功（串行化正确，无流交叉）。
+- 证据：`poc/evidence/concurrency/`（`summary.json`、`busy.json`、`waited.json`、worker 日志）。
+- 结论：per-session `flock` 足以支撑多 agent 并发；**不需要 broker**（除非将来要求排队公平性/超时策略可观测）。
+
+### 13C. SSH 远程模式 ✅ VERIFIED（stdio 纯净性）
+
+- 临时 sshd（127.0.0.1:2222，一次性 host/client key 在 `/tmp/opencode/sshtest`）+ `ssh -T` 承载 `bun run mcp/src/server.ts`：
+  MCP 握手 294 ms；**37 个工具**可见；`verdi_capabilities` / `verdi_sessions_list` 正常。
+- 该测试同时证明 **stdout 协议纯净**：ssh banner、Verdi/NPI 噪声若进入 stdout 会直接打断握手。
+- 注意：ssh 非交互 shell 不继承 `DISPLAY`；远程 GUI 工具需在远端 `~/.ssh/environment` 设置 `DISPLAY`/`XAUTHORITY`，
+  或调用 `verdi_session_start` 时传 `display`。
+- 证据：`poc/evidence/remote/`（`summary.json`、`remote.log`、`sshd_config`）。
+
+### 13D. 正在写入的 FSDB ✅ VERIFIED（有前提）
+
+- `demo/writing`（15M cycles，~46 s，44 MB，每 1024 cycle `$fsdbDumpflush`）：
+  8 次采样全部能打开；`max_time` 单调增长；`is_completed()` 写入中 false、结束后 true；0 次失败。
+- **前提**：不 `$fsdbDumpflush` 时 VCS 缓冲，早期文件只有头部（首次实测 7 KB 却已经是全时长）。
+- 语义：结果只覆盖已落盘部分，必须结合 `max_time`/`is_completed` 判断完整性。
+- 证据：`poc/evidence/writing-fsdb/`。
+
+### 13E. 多级 cone（`levels>1`）❌ VERIFIED NEGATIVE
+
+- `schTraceFanInByLevel` / `schTraceDriverByLevel` / `schTraceLoadByLevel` 命令存在且可调用（`-level N` 合法）。
+- 但 `schDumpTracedLeafPin` 只接受 `schTraceDriver` / `schTraceLoad` / `schTraceConnectivity` 的结果；
+  对 `*ByLevel` 返回 `0 The previous action was not tracing driver, load or connectivity.`。
+- `schTraceReport -fanin on -showOn text` 返回空串且不写任何报告文件（`verdiLog` 无新文件）。
+- 结论：W-2024.09 **无法脚本化拿到多级 cone 的叶子引脚**；工具返回 `cone_paths` + `degraded=true`，不伪造。
+- 附带发现：`schTraceFanIn` 的结果同样不能被 dump，所以 `verdi_fanin_get(levels=1)` 映射到 `schTraceDriver`（1 层 fan-in ≡ 直接 driver 集合）。
+- 附带发现：`libnclt` 可用 `info commands` 枚举全部 Verdi Tcl 命令；官方参数文档在
+  `$VERDI_HOME/etc/verdiTcl/linux64/verdi_tcl.db`（SQLite，`function_table.content` 是 JSON schema），比 PDF 更好用。

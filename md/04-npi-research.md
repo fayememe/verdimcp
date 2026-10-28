@@ -1,6 +1,6 @@
 # Verdi MCP：NPI 技术调研与混合波形引擎方案
 
-> 2026-10-17 · 研究与实施建议，尚未在 f29 验证
+> 2026-10-17 · 研究与实施建议；P0 已在 f29 验证，P1 部分实测（2026-10-18）
 
 ## 1. NPI 调研：verdi_bridge 的已实现机制
 
@@ -98,6 +98,55 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 - **尚未做（P1）**：信号/层级列表 dump、128 signals × 8 timestamps、大 FSDB、
   正在写入的 FSDB、并发 worker。
 
+### P1 实测（2026-10-18，VERIFIED）
+
+数据：`demo/bigfsdb/big.fsdb`，903 MB，128 个 32-bit 信号 + clk，5M cycles，1ps，0..4,999,999,500 ps。
+
+| 路径 | 操作 | 时间 | 峰值 RSS |
+|---|---|---:|---:|
+| NPI | init + open + 128×2000 采样 + SVG + `convert` PNG | **30.6 s**（init 3.0 / read 18.1 / SVG 0.1 / PNG 8.3） | **8.0 GB** |
+| GUI proxy | create + open + dump + add 128 + zoom + xid + screenshot | **27.0 s** | **8.36 GB** |
+| GUI same-window | add 128 + zoom + view + xid + screenshot | **9.7 s** | 同上 |
+
+结论：
+- **NPI 全窗渲染并不比 GUI 快**：NPI 读+渲染 ≈ 26.4 s，GUI 同窗口操作 ≈ 9.7 s。
+- 两者内存都在 8 GB 量级（FSDB 索引/缓存主导）；headless 不省内存。
+- NPI 冷启动第一次 25.6k 查询 17.7 s；预热后 256k 查询 18.1 s，说明首次测量受缓存影响。
+- 因此 `waveform_render` 必须收窄到少量信号/小窗口；超大 FSDB 优先 GUI 捕获或聚合 value table（详见 `md/10-visual-evidence.md` §8）。
+- 证据：`poc/evidence/diff-levers/npi-p1/`。
+
+### P1b 实测：常驻 Reader 与正在写入的 FSDB（2026-10-27，VERIFIED）
+
+**常驻 Reader**（`mcp/npi/npi_worker.py --serve` + `mcp/src/npi.ts`）：
+
+- 一个 Python 进程常驻，`npisys.init()` 只付一次（~3.0 s），FSDB 句柄按路径复用；空闲 10 min 自动退出（`VERDI_MCP_NPI_IDLE_MS`）。
+- 实测（demo `sync_fifo.fsdb`，同一 MCP server 进程内连续调用）：
+
+  | 调用 | 模式 | 耗时 |
+  |---|---|---:|
+  | `verdi_xz_scan`（首次，含 init + open） | resident | 5.4 s |
+  | `verdi_xz_scan`（第二次，热句柄） | resident | 1.3 s |
+  | `verdi_change_stats`（第三次） | resident | 0.6 s |
+  | 单次进程模式（对照组，每次） | one-shot | ~3.1 s + 查询 |
+
+- 传输错误（进程崩溃/管道断）自动回退单次进程；查询级错误（`not_supported`/`invalid_argument`）不回退、不重试。
+- `VERDI_MCP_NPI_RESIDENT=0` 可强制回到单次进程模式（排查用）。
+- 限制：同一时刻只持有一个 FSDB；切换 FSDB 会 close 旧句柄。
+
+**正在写入的 FSDB**（`demo/writing`，15M cycles，约 46 s，44 MB）：
+
+| 采样 | 仿真中 | 文件大小 | `max_time` | `is_completed` |
+|---|---|---|---:|---|
+| 1 | 是 | 40 KB | 0.42 µs | false |
+| 4 | 是 | 11 MB | 4.2 µs | false |
+| 8 | 是 | 27 MB | 9.5 µs | false |
+| 9（结束后） | 否 | 44 MB | 15 µs | true |
+
+- **8/8 次写入中打开成功**，`max_time` 单调增长，`is_completed()` 在写入中为 false、结束后 true；0 次查询失败。
+- 前提：testbench 每 1024 cycle 调 `$fsdbDumpflush`。不 flush 时 VCS 会缓冲，文件在很长时间里只有头部（第一次实测 7 KB 却已是全时长，正是缓冲造成的假象）。
+- 因此对“正在写入的 FSDB”可查询，但**结果只覆盖已落盘部分**；agent 必须看 `max_time`/`is_completed` 判断是否完整，不能把部分结果当最终结论。
+- 证据：`poc/evidence/writing-fsdb/`（`summary.json`、`summary.md`、`samples.jsonl`）。
+
 **P1：性能与语义**
 - 小查询（1–4 signals × 少量 timestamps）、中等查询（128 signals × 8 timestamps）、长区间 transition count、clock sampling。
 - 比较 GUI/libnclt 与 NPI 的 wall time、GUI 响应性、峰值内存、结果一致性。
@@ -109,11 +158,14 @@ NPI 单次启动、初始化和打开 FSDB 约 0.6 秒，因此不适合所有�
 - 在本地 OpenCode + Zed Remote Project、远程 OpenCode 两种模式各跑一次 end-to-end。
 - 先做一个真实 RTL/SoC bug 工作流：定位错误时间 → 批量读波形 → 将证据信号和时间窗口呈现在同一 Verdi GUI。
 
-**建议验收门槛**：P0 所有基础读取成功且语义正确；P1 有可重复的对比数据；P2 不要求 GUI 为批量分析长期阻塞。是否启用常驻 Reader 由数据决定。
+**建议验收门槛**：P0 所有基础读取成功且语义正确；P1 有可重复的对比数据；P2 不要求 GUI 为批量分析长期阻塞。
+
+**结论（2026-10-27）**：常驻 Reader **默认启用**（P1b 数据：热查询比单次进程快 3–5 倍以上，且不增加 FSDB 读取成本）；大 FSDB 全窗渲染仍受 P1 negative 约束，`waveform_render` 保持收窄。
 
 ## 5. 待决事项
 
 1. ~~f29 上 `pynpi` 是否可导入、能否正常 checkout 所需 license？~~ → ✅ 已实测：可导入、可打开 FSDB（见 P0 实测）。
+1b. ~~是否启用常驻 Reader？~~ → ✅ 启用（见 P1b）；~~正在写入的 FSDB 能否读？~~ → ✅ 能读已落盘部分（见 P1b）。
 2. 我们现有 Verdi/FSDB 版本的 API 行为是否与参考项目一致？→ demo FSDB 上单点值 / X / vc_count 正常；大 FSDB 与边界语义待 P1。
 3. 当前项目上下文如何可靠解析远程 host、user 和 Verdi session？
 4. 对方的 `npi_engine.py` 可参考哪些算法/接口设计？需核对版本与许可约束。

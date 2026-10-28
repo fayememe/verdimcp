@@ -1,6 +1,6 @@
 # Verdi MCP 方案
 
-> 状态：方案设计（MCP 尚未实现；后端已有一个可用的 PoC）
+> 状态：**已实现**（M0–M5，2026-10-18；见 `07-implementation-contract.md` / `08-implementation-status.md`）
 > 目标宿主：f29，Verdi W-2024.09-SP1
 > 相关文档：`01-test-progress.md`、`06-vs-verdi-bridge.md`、`05-web-api-reference.md`
 
@@ -96,8 +96,8 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 |---|---|---|---|
 | `verdi_capabilities` | — | verified/documented/untested 矩阵 | 设计 |
 | `verdi_sessions_list` | — | id/port/pid/fsdb/state | VERIFIED |
-| `verdi_session_start` | fsdb, design, args, label | sid/port | VERIFIED |
-| `verdi_session_stop` | sid | ok | VERIFIED |
+| `verdi_session_start` | fsdb, design, args, label | sid/port | ✅ VERIFIED（detach；不 attach 现有 GUI） |
+| `verdi_session_stop` | sid / label | ok | ✅ VERIFIED（仅 registry 内会话） |
 | `verdi_session_info` | sid | 完整会话信息 | VERIFIED |
 
 ### 4.2 窗口与视觉
@@ -107,36 +107,36 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 | `verdi_windows_list` | sid | wid / xid / kind | VERIFIED |
 | `verdi_window_create` | sid | wid | VERIFIED |
 | `verdi_window_screenshot` | sid, wid | PNG（MCP image content） | VERIFIED |
-| `verdi_window_raise` | sid, wid | ok | DOCUMENTED |
+| `verdi_window_raise` | sid, wid | ok | ✅ VERIFIED（`wvRaiseWindow`） |
 
 ### 4.3 波形
 
 | 工具 | 输入 | 输出 | 后端状态 |
 |---|---|---|---|
 | `verdi_fsdb_open` | sid, wid, path, unit | ok | VERIFIED |
-| `verdi_signals_list` | wid, scope/search, limit | 绝对路径列表 | 部分 VERIFIED |
+| `verdi_signals_list` | wid, scope/search, limit | 绝对路径列表 | ✅ VERIFIED |
 | `verdi_signals_add` | wid, signals[] | 每信号结果 | VERIFIED |
-| `verdi_signals_remove` | wid, signals[] | ok | DOCUMENTED |
+| `verdi_signals_remove` | wid, signals[] | ok | ✅ VERIFIED |
 | `verdi_cursor_set` | wid, time, unit | 实际时间 | VERIFIED |
 | `verdi_value_get` | wid, signal, time, unit | value + X/Z | VERIFIED（GUI；NPI 更快） |
 | `verdi_transitions_get` | wid, signal, start, end, unit, max | 跳变列表 | VERIFIED（`wvSearchNextBySignal` 循环 / NPI `sig_value_between`） |
-| `verdi_xz_scan` | wid, scope, start, end, max | 候选列表 | 部分 VERIFIED（NPI 验证；扫描工具未封装） |
+| `verdi_xz_scan` | wid, scope, start, end, max | 候选列表 | ✅ VERIFIED（NPI；GUI 回退为预算采样） |
 
 ### 4.4 设计
 
 | 工具 | 输入 | 输出 | 后端状态 |
 |---|---|---|---|
-| `verdi_scopes_list` | sid, root, limit | scope 列表 | DOCUMENTED |
+| `verdi_scopes_list` | sid, root, limit | scope 列表 | ✅ VERIFIED |
 | `verdi_drivers_get` | sid, signal | driver 列表 | VERIFIED（需 `-f` 设计库） |
-| `verdi_fanin_get` | sid, signal, levels | cone | 部分 VERIFIED（1 层；多点 cone 未测） |
-| `verdi_fanout_get` | sid, signal, levels | cone | 未测 |
+| `verdi_fanin_get` | sid, signal, levels | cone | ✅ 1 层 VERIFIED（映射 driver）；⚠️ >1 层只有 cone_paths |
+| `verdi_fanout_get` | sid, signal, levels | cone | ✅ VERIFIED（`schTraceLoad`） |
 | `verdi_source_get` | sid, signal/file, line | 源码片段 | VERIFIED（`srcCreateWindow` + `srcGetCaretFile`） |
 
 ### 4.5 逃生口
 
 | 工具 | 条件 | 说明 |
 |---|---|---|
-| `verdi_command` | 环境变量 `VERDI_ALLOW_RAW=1` | 原始 Tcl，逐条审计，默认关闭 |
+| `verdi_tcl_exec` | 环境变量 `VERDI_ALLOW_RAW=1` | 原始 Tcl，逐条审计，默认关闭（v2 已实现） |
 
 > 值/跳变/XZ 与设计追踪的实测命令、语义和坑见 `01-test-progress.md` §5A–5E。
 > 关键语义：值查询支持 `-lz` 定宽；X/Z 保留字符串；总线名用 `{}`；信号必须先加入窗口。
@@ -216,3 +216,15 @@ Verdi GUI（-serverPort）/ FSDB Reader（无 GUI）
 - `05-web-api-reference.md`：如果未来把后端做成 HTTP 服务，端点以此为准。
 - `01-test-progress.md`：当前实测到哪一步。
 - `06-vs-verdi-bridge.md`：与开源方案的对比与差异化策略。
+
+---
+
+## 11. 实现状态（2026-10-18）
+
+M0–M5 已实现并通过 demo 端到端验收，详见：
+
+- `md/07-implementation-contract.md`：M0–M5 的实际接口契约（CLI JSON、19 个 MCP 工具、错误码、并发、验收）。
+- `md/08-implementation-status.md`：逐阶段状态、偏差、未验证项。
+- `poc/evidence/m1-m5/`：56 项验收检查、截图与日志。
+
+实现要点：MCP（Bun/TS）→ `verdi-session` CLI → `cmdclient`；每会话 `flock`；截图存 `~/.local/state/verdi-mcp/screenshots/`；XZ/大范围跳变走 NPI 短进程；设计追踪依赖 `-f` 设计库，无库返回 `not_supported`。
