@@ -67,6 +67,11 @@ last) and signal paths. Protocol rules are text in skills.
 |---|---|
 | <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
 | <img src="docs/evidence/demo/03-aes-subbytes16.png" width="430"> | <img src="docs/evidence/demo/04-aes-sbox-array.png" width="430"> |
+Both waveform views come from one run the agent built and drove: `tb_subbytes16` on the AES DOM design,
+120 SubBytes evaluations, 5.6 us of simulated time. It opened the FSDB, picked the handshake
+(`start_i` / `busy_o` / `done_o` / `en` / `ack`), the FSM state, the 128-bit data and mask buses, and the
+per-S-Box intermediates, then set the view to 0-1.5 us. In the second view a marker sits at 125 ns, where
+`done_o` first rises; the next pulses are at 235 ns and 345 ns.
 
 ## Tools
 
