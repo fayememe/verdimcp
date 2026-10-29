@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NPI query worker for verdi-mcp.
+"""NPI query worker for verdimcp.
 
 Two modes:
   npi_worker.py            one-shot: read one JSON request on stdin, print one JSON result
@@ -14,7 +14,10 @@ import json
 import os
 import sys
 
-VERDI_HOME = os.environ.get("VERDI_HOME", "/opt/synopsys/verdi/W-2024.09-SP1")
+VERDI_HOME = os.environ.get("VERDI_HOME")
+if not VERDI_HOME:
+    sys.stderr.write("error: VERDI_HOME is not set (source your site EDA environment)\n")
+    sys.exit(2)
 NPI_PYTHON = os.path.join(VERDI_HOME, "share", "NPI", "python")
 if NPI_PYTHON not in sys.path:
     sys.path.insert(0, NPI_PYTHON)
@@ -106,7 +109,29 @@ class Reader:
             self._initialised = False
 
 
+def fsdb_state(waveform, handle):
+    """Current FSDB state. Cheap enough to attach to every response."""
+    scale = parse_unit(handle.scale_unit())
+    max_time = int(handle.max_time())
+    return {
+        "scale_unit": "1" + scale,
+        "max_time_ticks": max_time,
+        "max_time": waveform.convert_time_out(handle, max_time, scale),
+        "is_completed": bool(handle.is_completed()),
+    }
+
+
 def handle_query(reader, payload):
+    result = query_body(reader, payload)
+    handle = reader._handle
+    if handle is None or reader._waveform is None:
+        return result
+    result = dict(result)
+    result["fsdb_state"] = fsdb_state(reader._waveform, handle)
+    return result
+
+
+def query_body(reader, payload):
     fsdb = payload.get("fsdb")
     if not fsdb:
         raise QueryError("invalid_argument", "fsdb is required")

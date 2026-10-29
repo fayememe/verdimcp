@@ -12,8 +12,6 @@ import type {
 } from "./context.js";
 import { AppError, type ErrorCode } from "./errors.js";
 
-const VERDI_HOME_DEFAULT = "/opt/synopsys/verdi/W-2024.09-SP1";
-
 interface RunResult {
   stdout: string;
   stderr: string;
@@ -97,7 +95,12 @@ export class DefaultBackend implements Backend {
     args.push("--", ...verdiArgs);
 
     const startedAt = Date.now();
-    const display = opts.display ?? process.env.DISPLAY ?? process.env.VERDI_DISPLAY ?? "localhost:10.0";
+    const display = opts.display ?? process.env.DISPLAY ?? process.env.VERDI_DISPLAY;
+    if (!display) {
+      throw new AppError("not_supported", "no DISPLAY for the Verdi GUI", {
+        hint: "pass display, or export DISPLAY (over SSH: ssh -X and check echo $DISPLAY)",
+      });
+    }
     const r = await this.run(this.cli, args, {
       timeoutMs: timeoutSec * 1000 + 60_000,
       cwd: opts.cwd,
@@ -251,9 +254,14 @@ export class DefaultBackend implements Backend {
       });
     }
     const xid = xidResult.result.trim().replace(/^0x/i, "");
-    const display = session.display || "localhost:10.0";
+    const display = session.display || process.env.DISPLAY;
+    if (!display) {
+      throw new AppError("not_supported", "no DISPLAY to capture the window", {
+        hint: "export DISPLAY, or start the session with an explicit display",
+      });
+    }
     const xauthority = process.env.XAUTHORITY || join(homedir(), ".Xauthority");
-    const dir = join(homedir(), ".local/state/verdi-mcp/screenshots");
+    const dir = join(homedir(), ".local/state/verdimcp/screenshots");
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const path = join(dir, `${sessionId}-${windowId}-${Date.now()}.png`);
 
@@ -298,8 +306,11 @@ export class DefaultBackend implements Backend {
   }
 
   async capabilities(): Promise<CapabilityMatrix> {
-    const verdiHome = process.env.VERDI_HOME || VERDI_HOME_DEFAULT;
-    const npi = existsSync(join(verdiHome, "share/NPI/python/pynpi")) && Bun.which("python3") !== null;
+    const verdiHome = process.env.VERDI_HOME ?? null;
+    const npi =
+      verdiHome !== null &&
+      existsSync(join(verdiHome, "share/NPI/python/pynpi")) &&
+      Bun.which("python3") !== null;
     return {
       verdi_home: verdiHome,
       engines: { gui: true, npi },
@@ -326,6 +337,16 @@ export class DefaultBackend implements Backend {
         { name: "verdi_fanin_get", status: "verified", notes: "1 level; >1 degraded (ByLevel has no leaf pins)" },
         { name: "verdi_fanout_get", status: "verified", notes: "schTraceLoad" },
         { name: "verdi_source_get", status: "verified", notes: "requires -f design library" },
+        {
+          name: "verdi_cone_capture",
+          status: "verified",
+          notes: "nSchema cone PNG; image only (no textual cone dump)",
+        },
+        {
+          name: "verdi_waveform_compare",
+          status: "verified",
+          notes: "wvCompareSelected + screenshot; no textual diff (needs a second pane)",
+        },
         { name: "verdi_signal_map_put", status: "verified" },
         { name: "verdi_signal_map_get", status: "verified" },
         { name: "verdi_signal_map_list", status: "verified" },
@@ -406,7 +427,7 @@ export class DefaultBackend implements Backend {
 
 function audit(entry: Record<string, unknown>): void {
   try {
-    const dir = join(homedir(), ".local/state/verdi-mcp");
+    const dir = join(homedir(), ".local/state/verdimcp");
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     appendFileSync(
       join(dir, "audit.jsonl"),

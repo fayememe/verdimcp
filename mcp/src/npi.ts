@@ -1,11 +1,17 @@
 import { dirname, join, resolve } from "node:path";
 import { AppError, type ErrorCode } from "./errors.js";
 
-const VERDI_HOME_DEFAULT = "/opt/synopsys/verdi/W-2024.09-SP1";
 export const NPI_IDLE_MS = Number(process.env.VERDI_MCP_NPI_IDLE_MS ?? 600_000);
 
 export function npiEnv(): Record<string, string> {
-  const verdiHome = process.env.VERDI_HOME || VERDI_HOME_DEFAULT;
+  const verdiHome = process.env.VERDI_HOME;
+  if (!verdiHome) {
+    throw new AppError(
+      "not_supported",
+      "VERDI_HOME is not set; the NPI reader needs a Verdi installation",
+      { hint: "export VERDI_HOME=<your verdi install> (and source your site EDA env) before starting the MCP server" },
+    );
+  }
   const ld = [
     join(verdiHome, "share/NPI/lib/linux64"),
     join(verdiHome, "platform/linux64/lib/Qt5/lib"),
@@ -15,7 +21,6 @@ export function npiEnv(): Record<string, string> {
     .join(":");
   return {
     VERDI_HOME: verdiHome,
-    SNPSLMD_LICENSE_FILE: process.env.SNPSLMD_LICENSE_FILE || "27010@127.0.0.1",
     PYTHONPATH: [join(verdiHome, "share/NPI/python"), process.env.PYTHONPATH]
       .filter((value): value is string => Boolean(value))
       .join(":"),

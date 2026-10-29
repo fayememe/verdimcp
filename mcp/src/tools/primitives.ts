@@ -6,11 +6,12 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { SessionEntry, ToolContext } from "../context.js";
 import { AppError, runTool } from "../errors.js";
+import { buildEngine, buildFsdb, fsdbStateFrom, fsdbUnitOf } from "../provenance.js";
 import { convertTime, parseUnit, type TimeUnit } from "../time.js";
 import { tclQuote } from "./waveform.js";
 import { dumpSignals, firstWindow, fsdbFor, runNpi, toNpiName, windowUnit } from "./values.js";
 
-const stateDir = join(homedir(), ".local/state/verdi-mcp");
+const stateDir = join(homedir(), ".local/state/verdimcp");
 const mapPath = join(stateDir, "signal-maps.json");
 const checkPath = join(stateDir, "checks.json");
 
@@ -408,7 +409,7 @@ export function registerPrimitives(server: McpServer, ctx: ToolContext): void {
     {
       title: "Aggregate signal changes",
       description:
-        "Return per-signal change count and first/last values over a time range. Aggregate only; never returns the raw change stream.",
+        "Return per-signal change count and first/last values over a time range. Aggregate only; never returns the raw change stream. NPI-only: the GUI cannot count transitions without enumerating every edge, so data.engine.alternatives is always empty. data.fsdb carries max_time and is_completed so you can tell whether the FSDB is still being written.",
       inputSchema: {
         session_id: z.string().min(1).optional(),
         signals: z.array(z.string().min(1)).min(1).max(256),
@@ -419,20 +420,36 @@ export function registerPrimitives(server: McpServer, ctx: ToolContext): void {
     },
     async (args) =>
       runTool("verdi_change_stats", async () => {
+        const startedAt = performance.now();
         const session = await ctx.backend.resolveSession(args.session_id);
         const fsdb = fsdbFor(session);
         if (!fsdb) throw new AppError("not_supported", "change_stats requires an FSDB");
         const windowId = await firstWindow(ctx, session.id);
         const unit = args.unit ?? (await windowUnit(ctx, session.id, windowId));
+        const end = args.end;
         const data = await runNpi({
           action: "change_stats",
           fsdb,
           signals: args.signals.map(toNpiName),
           start: { value: args.start ?? 0, unit },
-          end: args.end === undefined ? undefined : { value: args.end, unit },
+          end: end === undefined ? undefined : { value: end, unit },
           format: "Hex",
         });
-        return { stats: data.stats ?? [], scale_unit: data.scale_unit ?? `1${unit}`, source: "npi" };
+        const state = fsdbStateFrom(data);
+        const fsdbUnit = fsdbUnitOf(state, unit);
+        return {
+          stats: data.stats ?? [],
+          scale_unit: data.scale_unit ?? `1${unit}`,
+          source: "npi",
+          engine: buildEngine({
+            requested: "auto",
+            used: "npi",
+            reason: "npi only: GUI cannot count transitions without enumerating every edge",
+            startedAt,
+            alternatives: [],
+          }),
+          fsdb: buildFsdb({ path: fsdb, state, fsdbUnit, outUnit: unit, end }),
+        };
       }),
   );
 

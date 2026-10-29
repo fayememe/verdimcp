@@ -12,6 +12,16 @@ const expected = [
   "verdi_window_screenshot",
 ];
 
+function childEnv(): Record<string, string> {
+  // StdioClientTransport only forwards a safe subset by default; the server needs the
+  // caller's EDA environment (VERDI_HOME, DISPLAY, XAUTHORITY, LD_LIBRARY_PATH, ...).
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") env[key] = value;
+  }
+  return env;
+}
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -32,8 +42,9 @@ async function main(): Promise<void> {
     args: ["run", "src/server.ts"],
     cwd: mcpRoot,
     stderr: "pipe",
+    env: childEnv(),
   });
-  const client = new Client({ name: "verdi-mcp-smoke", version: "0.1.0" });
+  const client = new Client({ name: "verdimcp-smoke", version: "0.1.0" });
   await client.connect(transport);
 
   try {

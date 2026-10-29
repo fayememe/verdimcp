@@ -9,7 +9,7 @@ import { AppError, runTool } from "../errors.js";
 import { assertAllowedPath } from "../paths.js";
 import { tclQuote } from "./waveform.js";
 
-const tmpDir = join(homedir(), ".local/state/verdi-mcp/tmp");
+const tmpDir = join(homedir(), ".local/state/verdimcp/tmp");
 
 function toDotName(name: string): string {
   return name.replace(/^\/+/, "").replaceAll("/", ".");

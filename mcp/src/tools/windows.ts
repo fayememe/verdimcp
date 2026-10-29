@@ -119,7 +119,7 @@ export function registerWindows(server: McpServer, ctx: ToolContext): void {
     {
       title: "Screenshot nWave window",
       description:
-        "Capture a PNG of one nWave window. Saves the file under ~/.local/state/verdi-mcp/screenshots and returns its path, size, dimensions and sha256. By default also returns the PNG as MCP image content when it is at most 2 MB.",
+        "Capture a PNG of one nWave window. Saves the file under ~/.local/state/verdimcp/screenshots and returns its path, size, dimensions and sha256. By default also returns the PNG as MCP image content when it is at most 2 MB.",
       inputSchema: {
         session_id: z.string().min(1).optional(),
         window_id: z.string().min(1),

@@ -7,13 +7,23 @@ import { z } from "zod";
 import type { SessionEntry, ToolContext } from "../context.js";
 import { AppError, runTool } from "../errors.js";
 import { knownFsdb } from "../state.js";
-import { convertTime, parseUnit, unitFromWindow, type TimeUnit } from "../time.js";
+import { convertTime, unitFromWindow, type TimeUnit } from "../time.js";
 import { tclQuote } from "./waveform.js";
 
 import { runNpi } from "../npi.js";
+import {
+  buildEngine,
+  buildFsdb,
+  fsdbStateFrom,
+  fsdbUnitOf,
+  readFsdbState,
+  TRANSITIONS_NPI_MIN_MAX,
+  withSuffix,
+  withSwitchHint,
+} from "../provenance.js";
 export { runNpi };
 
-const tmpDir = join(homedir(), ".local/state/verdi-mcp/tmp");
+const tmpDir = join(homedir(), ".local/state/verdimcp/tmp");
 
 export async function allWindows(ctx: ToolContext, sessionId: string): Promise<string[]> {
   const res = await ctx.backend.exec(sessionId, ["wvGetAllWindows"]);
@@ -161,7 +171,7 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
     {
       title: "Get signal transitions",
       description:
-        "List value changes of one signal in a time range. engine=auto uses NPI for larger max values (fast) and GUI for small ones. Glitches are skipped by the GUI API; use NPI when completeness matters. Times are returned in the requested unit.",
+        "List value changes of one signal in a time range. Two engines exist: `npi` (exact, returns every transition, needs an FSDB) and `gui` (wvSearchNextBySignal; cheaper to start but skips glitches). engine=auto picks NPI when max > 200 and an FSDB is known. The chosen engine is always reported in data.engine.used with a reason; pass engine=\"gui\" or engine=\"npi\" to force one (an explicit engine is never silently swapped, and a failure returns a hint). data.fsdb carries max_time and is_completed so you can tell whether the FSDB is still being written; data.engine.switch_hint appears only when the call exceeded 15 s and the other engine is available. Times are returned in the requested unit.",
       inputSchema: {
         session_id: z.string().min(1).optional(),
         window_id: z.string().min(1).optional(),
@@ -176,20 +186,27 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
     },
     async (args) =>
       runTool("verdi_transitions_get", async () => {
+        const startedAt = performance.now();
         const session = await ctx.backend.resolveSession(args.session_id);
         const windowId = args.window_id ?? (await firstWindow(ctx, session.id));
         const unit = await windowUnit(ctx, session.id, windowId);
         const outUnit = args.unit ?? unit;
         const max = args.max ?? 1000;
-        const engine = args.engine ?? "auto";
+        const engineRequest = args.engine ?? "auto";
         const start = args.start ?? 0;
         const end = args.end;
         const fsdb = fsdbFor(session, undefined);
+        const npiUsable = fsdb !== null;
+        const autoPicksNpi = max > TRANSITIONS_NPI_MIN_MAX && npiUsable;
 
-        const tryNpi = engine === "npi" || (engine === "auto" && max > 200 && fsdb !== null);
-        if (tryNpi) {
-          if (!fsdb) {
-            throw new AppError("not_supported", "NPI requires an FSDB path; call verdi_fsdb_open first");
+        let fallback = false;
+        let npiFailure: string | null = null;
+
+        if (engineRequest === "npi" || (engineRequest === "auto" && autoPicksNpi)) {
+          if (!npiUsable) {
+            throw new AppError("not_supported", "NPI requires an FSDB path; call verdi_fsdb_open first", {
+              hint: 'retry with engine="gui"',
+            });
           }
           try {
             const data = await runNpi({
@@ -201,7 +218,8 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
               max,
               format: "Hex",
             });
-            const fsdbUnit = parseUnit(String(data.scale_unit ?? "")) ?? outUnit;
+            const state = fsdbStateFrom(data);
+            const fsdbUnit = fsdbUnitOf(state, outUnit);
             const rows = (data.transitions as Array<{ time_ticks: number; value: string }>) ?? [];
             return {
               signal: args.signal,
@@ -212,9 +230,22 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
               truncated: Boolean(data.truncated),
               source: "npi",
               unit: outUnit,
+              engine: buildEngine({
+                requested: engineRequest,
+                used: "npi",
+                reason:
+                  engineRequest === "npi"
+                    ? "explicit engine=npi"
+                    : `auto: NPI (max=${max} > ${TRANSITIONS_NPI_MIN_MAX}, fsdb known)`,
+                startedAt,
+                alternatives: ["gui"],
+              }),
+              fsdb: buildFsdb({ path: fsdb, state, fsdbUnit, outUnit, end }),
             };
           } catch (err) {
-            if (engine === "npi") throw err;
+            if (engineRequest === "npi") throw withSwitchHint(err);
+            fallback = true;
+            npiFailure = err instanceof Error ? err.message : String(err);
           }
         }
 
@@ -262,6 +293,15 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
           valuesTruncated = times.length > limit;
         }
 
+        const guiReason = fallback
+          ? `auto: GUI (npi failed: ${npiFailure ?? "unknown error"})`
+          : engineRequest === "gui"
+            ? "explicit engine=gui"
+            : npiUsable
+              ? `auto: GUI (max=${max} <= ${TRANSITIONS_NPI_MIN_MAX})`
+              : "auto: GUI (npi unavailable: no fsdb)";
+        const info = fsdb === null ? { state: null, error: null } : await readFsdbState(fsdb);
+
         return {
           signal: args.signal,
           transitions: times.map((ticks, index) => ({
@@ -272,6 +312,27 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
           values_truncated: valuesTruncated,
           source: "gui",
           unit: outUnit,
+          engine: buildEngine({
+            requested: engineRequest,
+            used: "gui",
+            reason: withSuffix(
+              guiReason,
+              info.error === null ? null : `fsdb state unavailable: ${info.error}`,
+            ),
+            startedAt,
+            alternatives: npiUsable ? ["npi"] : [],
+            fallback,
+          }),
+          fsdb:
+            fsdb === null
+              ? null
+              : buildFsdb({
+                  path: fsdb,
+                  state: info.state,
+                  fsdbUnit: fsdbUnitOf(info.state, outUnit),
+                  outUnit,
+                  end,
+                }),
         };
       }),
   );
@@ -281,7 +342,7 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
     {
       title: "Scan signals for X/Z",
       description:
-        "Scan one or more signals (or every signal under a scope) for X/Z values in a time range. Uses the NPI FSDB reader by default; falls back to budgeted GUI sampling if NPI is unavailable. Returns candidate {signal,time,value} entries and a truncated flag.",
+        "Scan one or more signals (or every signal under a scope) for X/Z values in a time range. Two engines exist: `npi` (FSDB reader; enumerates real transitions) and `gui` (budgeted sampling, degraded). engine=auto picks NPI whenever an FSDB is known. The chosen engine is reported in data.engine.used with a reason; pass engine=\"gui\" or engine=\"npi\" to force one (an explicit engine is never silently swapped, and a failure returns a hint). data.fsdb carries max_time and is_completed so you can tell whether the FSDB is still being written; data.engine.switch_hint appears only when the call exceeded 15 s and the other engine is available. Returns candidate {signal,time,value} entries and a truncated flag.",
       inputSchema: {
         session_id: z.string().min(1).optional(),
         window_id: z.string().min(1).optional(),
@@ -297,15 +358,17 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
     },
     async (args) =>
       runTool("verdi_xz_scan", async () => {
+        const startedAt = performance.now();
         const session = await ctx.backend.resolveSession(args.session_id);
         const windowId = args.window_id ?? (await firstWindow(ctx, session.id));
         const unit = await windowUnit(ctx, session.id, windowId);
         const outUnit = args.unit ?? unit;
         const max = args.max ?? 100;
-        const engine = args.engine ?? "auto";
+        const engineRequest = args.engine ?? "auto";
         const start = args.start ?? 0;
         const end = args.end;
         const fsdb = fsdbFor(session, args.fsdb);
+        const npiUsable = fsdb !== null;
 
         let signals = args.signals ?? [];
         if (signals.length === 0 && args.scope) {
@@ -318,10 +381,14 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
         }
         signals = signals.slice(0, 100);
 
-        const tryNpi = engine === "npi" || (engine === "auto" && fsdb !== null);
-        if (tryNpi) {
-          if (!fsdb) {
-            throw new AppError("not_supported", "NPI requires an FSDB path; call verdi_fsdb_open first");
+        let fallback = false;
+        let npiFailure: string | null = null;
+
+        if (engineRequest === "npi" || (engineRequest === "auto" && npiUsable)) {
+          if (!npiUsable) {
+            throw new AppError("not_supported", "NPI requires an FSDB path; call verdi_fsdb_open first", {
+              hint: 'retry with engine="gui"',
+            });
           }
           try {
             const data = await runNpi({
@@ -333,7 +400,8 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
               max,
               format: "Hex",
             });
-            const fsdbUnit = parseUnit(String(data.scale_unit ?? "")) ?? outUnit;
+            const state = fsdbStateFrom(data);
+            const fsdbUnit = fsdbUnitOf(state, outUnit);
             const rows = (data.candidates as Array<{ signal: string; time_ticks: number; value: string }>) ?? [];
             return {
               candidates: rows.map((row) => ({
@@ -345,9 +413,22 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
               source: "npi",
               unit: outUnit,
               signals_scanned: signals.length,
+              engine: buildEngine({
+                requested: engineRequest,
+                used: "npi",
+                reason:
+                  engineRequest === "npi"
+                    ? "explicit engine=npi"
+                    : `auto: NPI (fsdb known, ${signals.length} signals)`,
+                startedAt,
+                alternatives: ["gui"],
+              }),
+              fsdb: buildFsdb({ path: fsdb, state, fsdbUnit, outUnit, end }),
             };
           } catch (err) {
-            if (engine === "npi") throw err;
+            if (engineRequest === "npi") throw withSwitchHint(err);
+            fallback = true;
+            npiFailure = err instanceof Error ? err.message : String(err);
           }
         }
 
@@ -377,6 +458,14 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
             }
           }
         }
+
+        const guiReason = fallback
+          ? `auto: GUI (npi failed: ${npiFailure ?? "unknown error"})`
+          : engineRequest === "gui"
+            ? "explicit engine=gui"
+            : "auto: GUI (npi unavailable: no fsdb)";
+        const info = fsdb === null ? { state: null, error: null } : await readFsdbState(fsdb);
+
         return {
           candidates,
           truncated,
@@ -384,6 +473,27 @@ export function registerValues(server: McpServer, ctx: ToolContext): void {
           degraded: true,
           unit: outUnit,
           signals_scanned: Math.min(signals.length, 20),
+          engine: buildEngine({
+            requested: engineRequest,
+            used: "gui",
+            reason: withSuffix(
+              guiReason,
+              info.error === null ? null : `fsdb state unavailable: ${info.error}`,
+            ),
+            startedAt,
+            alternatives: npiUsable ? ["npi"] : [],
+            fallback,
+          }),
+          fsdb:
+            fsdb === null
+              ? null
+              : buildFsdb({
+                  path: fsdb,
+                  state: info.state,
+                  fsdbUnit: fsdbUnitOf(info.state, outUnit),
+                  outUnit,
+                  end,
+                }),
         };
       }),
   );

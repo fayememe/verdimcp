@@ -14,7 +14,7 @@ export function registerTcl(server: McpServer, ctx: ToolContext): void {
     {
       title: "Run raw Verdi Tcl (disabled by default)",
       description:
-        "Escape hatch: evaluate up to 20 raw Tcl commands in the target Verdi session, one result each. Disabled unless the MCP server was started with VERDI_ALLOW_RAW=1, because Tcl can exec arbitrary processes. Every command is written to ~/.local/state/verdi-mcp/audit.jsonl. Prefer the typed tools.",
+        "Escape hatch: evaluate up to 20 raw Tcl commands in the target Verdi session, one result each. Disabled unless the MCP server was started with VERDI_ALLOW_RAW=1, because Tcl can exec arbitrary processes. Every command is written to ~/.local/state/verdimcp/audit.jsonl. Prefer the typed tools.",
       inputSchema: {
         session_id: z.string().min(1).optional(),
         commands: z.array(z.string().min(1).max(4000)).min(1).max(20),

@@ -5,7 +5,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 
 const mcpRoot = resolve(dirname(new URL(import.meta.url).pathname), "..");
 const repoRoot = resolve(mcpRoot, "..");
-const evidenceDir = join(repoRoot, "poc/evidence/m1-m5");
+const evidenceDir = join(repoRoot, "evidence/m1-m5");
 mkdirSync(evidenceDir, { recursive: true });
 const logPath = join(evidenceDir, "mcp-smoke.log");
 const summaryPath = join(evidenceDir, "summary.json");
@@ -38,6 +38,16 @@ const expectedTools = [
 
 const summary: Record<string, unknown> = { started: new Date().toISOString(), checks: [] };
 
+function childEnv(): Record<string, string> {
+  // StdioClientTransport only forwards a safe subset by default; the server needs the
+  // caller's EDA environment (VERDI_HOME, DISPLAY, XAUTHORITY, LD_LIBRARY_PATH, ...).
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") env[key] = value;
+  }
+  return env;
+}
+
 function log(line: string): void {
   const text = `[${new Date().toISOString()}] ${line}`;
   console.log(text);
@@ -68,8 +78,9 @@ async function main(): Promise<void> {
     args: ["run", "mcp/src/server.ts"],
     cwd: repoRoot,
     stderr: "pipe",
+    env: childEnv(),
   });
-  const client = new Client({ name: "verdi-mcp-acceptance", version: "0.1.0" });
+  const client = new Client({ name: "verdimcp-acceptance", version: "0.1.0" });
   await client.connect(transport);
 
   const call = async (name: string, args: Record<string, unknown> = {}) => {
@@ -220,6 +231,28 @@ async function main(): Promise<void> {
       ((transitions.data as { transitions?: unknown[] }).transitions ?? []).length > 0,
     );
 
+    const autoEngine = (transitions.data as { engine?: Record<string, unknown> } | undefined)
+      ?.engine;
+    check(
+      "transitions.engine_reported",
+      autoEngine?.used === "npi" || autoEngine?.used === "gui",
+      autoEngine,
+    );
+    check(
+      "transitions.switch_hint_null_when_fast",
+      autoEngine?.switch_hint === null,
+      autoEngine,
+    );
+    const autoFsdb = (transitions.data as { fsdb?: Record<string, unknown> | null } | undefined)
+      ?.fsdb;
+    check(
+      "transitions.fsdb_block",
+      autoFsdb === null ||
+        autoFsdb === undefined ||
+        (typeof autoFsdb.is_completed === "boolean" && typeof autoFsdb.max_time === "number"),
+      autoFsdb,
+    );
+
     const guiTransitions = await call("verdi_transitions_get", {
       session_id: sid,
       window_id: windowId,
@@ -231,6 +264,13 @@ async function main(): Promise<void> {
       engine: "gui",
     });
     check("transitions.gui_ok", guiTransitions.ok === true, guiTransitions.data);
+    const guiEngine = (guiTransitions.data as { engine?: Record<string, unknown> } | undefined)
+      ?.engine;
+    check(
+      "transitions.explicit_gui_honoured",
+      guiEngine?.used === "gui" && guiEngine?.requested === "gui" && guiEngine?.fallback === false,
+      guiEngine,
+    );
 
     const xz = await call("verdi_xz_scan", {
       session_id: sid,
@@ -247,6 +287,14 @@ async function main(): Promise<void> {
       "xz_scan.has_x",
       ((xz.data as { candidates?: unknown[] }).candidates ?? []).length > 0,
       xz.data,
+    );
+    const xzEngine = (xz.data as { engine?: Record<string, unknown> } | undefined)?.engine;
+    check("xz_scan.engine_used_npi", xzEngine?.used === "npi", xzEngine);
+    const xzFsdb = (xz.data as { fsdb?: Record<string, unknown> | null } | undefined)?.fsdb;
+    check(
+      "xz_scan.fsdb_completed",
+      xzFsdb !== null && xzFsdb !== undefined && xzFsdb.is_completed === true,
+      xzFsdb,
     );
 
     const scopes = await call("verdi_scopes_list", {
@@ -271,6 +319,54 @@ async function main(): Promise<void> {
       const code = (traced.error as { code?: string } | undefined)?.code;
       check(`${name}.ok_or_not_supported`, traced.ok === true || code === "not_supported", traced.error);
     }
+
+    const runCompare = await call("verdi_waveform_compare", {
+      session_id: sid,
+      window_id: windowId,
+      signals: [clk],
+      against_fsdb: [`${process.cwd()}/demo/sim/sync_fifo.fsdb`],
+    });
+    check("waveform_compare.ok", runCompare.ok === true, runCompare.error);
+    const compareImage = (runCompare.data as { image?: { path?: string; bytes?: number } } | undefined)
+      ?.image;
+    check(
+      "waveform_compare.image",
+      Boolean(compareImage?.path) && (compareImage?.bytes ?? 0) > 1000,
+      compareImage,
+    );
+
+    const coneDriver = await call("verdi_cone_capture", {
+      session_id: sid,
+      signal: "tb_sync_fifo.clk",
+      mode: "driver",
+    });
+    check(
+      "cone_capture.driver_ok_or_not_supported",
+      coneDriver.ok === true ||
+        (coneDriver.error as { code?: string } | undefined)?.code === "not_supported",
+      coneDriver.error,
+    );
+
+    const coneX = await call("verdi_cone_capture", {
+      session_id: sid,
+      signal: "tb_sync_fifo.rd_data[7:0]",
+      mode: "x",
+      time: 0,
+      unit: "ns",
+    });
+    check("cone_capture.x_ok", coneX.ok === true, coneX.error);
+    const coneImage = (coneX.data as { image?: { path?: string; bytes?: number; width?: number } })
+      ?.image;
+    check(
+      "cone_capture.x_image",
+      Boolean(coneImage?.path) && (coneImage?.bytes ?? 0) > 1000 && (coneImage?.width ?? 0) > 0,
+      coneImage,
+    );
+    check(
+      "cone_capture.x_text_unavailable",
+      (coneX.data as { text_available?: boolean } | undefined)?.text_available === false,
+      coneX.data,
+    );
 
     const raised = await call("verdi_window_raise", { session_id: sid, window_id: windowId });
     check("window_raise.ok", raised.ok === true, raised.error);
@@ -364,6 +460,24 @@ async function main(): Promise<void> {
       "change_stats.rows",
       ((stats.data as { stats?: unknown[] }).stats ?? []).length === 3,
       stats.data,
+    );
+    const statsEngine = (stats.data as { engine?: Record<string, unknown> } | undefined)?.engine;
+    check(
+      "change_stats.engine_npi_only",
+      statsEngine?.used === "npi" &&
+        Array.isArray(statsEngine?.alternatives) &&
+        (statsEngine.alternatives as unknown[]).length === 0 &&
+        statsEngine?.switch_hint === null,
+      statsEngine,
+    );
+    const statsFsdb = (stats.data as { fsdb?: Record<string, unknown> | null } | undefined)?.fsdb;
+    check(
+      "change_stats.fsdb_block",
+      statsFsdb !== null &&
+        statsFsdb !== undefined &&
+        typeof statsFsdb.is_completed === "boolean" &&
+        typeof statsFsdb.max_time === "number",
+      statsFsdb,
     );
 
     const scan = await call("verdi_window_scan", {

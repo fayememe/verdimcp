@@ -10,13 +10,14 @@ import { registerDesign } from "./tools/design.js";
 import { registerPrimitives } from "./tools/primitives.js";
 import { registerEvidence } from "./tools/evidence.js";
 import { registerTcl } from "./tools/tcl.js";
+import { registerCone } from "./tools/cone.js";
 
 const backend = new DefaultBackend();
 const capabilities = await backend.capabilities();
 const ctx: ToolContext = { backend, capabilities };
 
 const server = new McpServer({
-  name: "verdi-mcp",
+  name: "verdimcp",
   version: "0.1.0",
 });
 
@@ -28,5 +29,6 @@ registerDesign(server, ctx);
 registerPrimitives(server, ctx);
 registerEvidence(server, ctx);
 registerTcl(server, ctx);
+registerCone(server, ctx);
 
 await server.connect(new StdioServerTransport());

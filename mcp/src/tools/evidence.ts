@@ -11,7 +11,7 @@ import { tclQuote } from "./waveform.js";
 import { allWindows, firstWindow, fsdbFor, windowUnit } from "./values.js";
 import { npiValues } from "./primitives.js";
 
-const evidenceDir = process.env.VERDI_EVIDENCE_DIR || join(homedir(), ".local/state/verdi-mcp/evidence");
+const evidenceDir = process.env.VERDI_EVIDENCE_DIR || join(homedir(), ".local/state/verdimcp/evidence");
 
 interface EvidenceItem {
   item_id: string;
@@ -279,7 +279,7 @@ export function registerEvidence(server: McpServer, ctx: ToolContext): void {
     {
       title: "Render a bounded headless waveform",
       description:
-        "Render a small digital waveform from NPI values. Bounded by design: at most 16 signals and 1000 bins. For 128-signal / big-FSDB views use GUI capture instead (see md/10 §8).",
+        "Render a small digital waveform from NPI values. Bounded by design: at most 16 signals and 1000 bins. For 128-signal / big-FSDB views use GUI capture instead (see docs/limits.md).",
       inputSchema: {
         evidence_id: z.string().min(1).optional(),
         session_id: z.string().min(1).optional(),

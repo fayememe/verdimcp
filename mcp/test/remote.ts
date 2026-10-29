@@ -10,12 +10,22 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
  * MCP handshake and fail here.
  */
 const repoRoot = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const evidenceDir = join(repoRoot, "poc/evidence/remote");
+const evidenceDir = join(repoRoot, "evidence/remote");
 mkdirSync(evidenceDir, { recursive: true });
 const logPath = join(evidenceDir, "remote.log");
 const summaryPath = join(evidenceDir, "summary.json");
 
 const checks: Array<{ name: string; passed: boolean; detail?: unknown }> = [];
+function childEnv(): Record<string, string> {
+  // StdioClientTransport only forwards a safe subset by default; the server needs the
+  // caller's EDA environment (VERDI_HOME, DISPLAY, XAUTHORITY, LD_LIBRARY_PATH, ...).
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") env[key] = value;
+  }
+  return env;
+}
+
 function check(name: string, passed: boolean, detail?: unknown): void {
   checks.push({ name, passed, detail });
   const line = `${passed ? "PASS" : "FAIL"} ${name}${detail === undefined ? "" : `: ${JSON.stringify(detail)}`}`;
@@ -36,8 +46,9 @@ const transport = new StdioClientTransport({
   command: argv[0],
   args: argv.slice(1),
   stderr: "pipe",
+    env: childEnv(),
 });
-const client = new Client({ name: "verdi-mcp-remote", version: "0.1.0" });
+const client = new Client({ name: "verdimcp-remote", version: "0.1.0" });
 await client.connect(transport);
 const connectMs = Date.now() - started;
 check("remote.handshake", true, { connect_ms: connectMs });

@@ -10,7 +10,7 @@ import { knownFsdb } from "../state.js";
 import { assertAllowedPath } from "../paths.js";
 import { convertTime, unitFromWindow, type TimeUnit } from "../time.js";
 
-const tmpDir = join(homedir(), ".local/state/verdi-mcp/tmp");
+const tmpDir = join(homedir(), ".local/state/verdimcp/tmp");
 
 export function tclQuote(name: string): string {
   if (name.startsWith("{") && name.endsWith("}")) return name;

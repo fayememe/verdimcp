@@ -8,11 +8,21 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
  * Only ever touches the session it starts (label mcp-lifecycle).
  */
 const repoRoot = resolve(dirname(new URL(import.meta.url).pathname), "../..");
-const evidenceDir = join(repoRoot, "poc/evidence/lifecycle");
+const evidenceDir = join(repoRoot, "evidence/lifecycle");
 mkdirSync(evidenceDir, { recursive: true });
 const logPath = join(evidenceDir, "lifecycle.log");
 
 const checks: Array<{ name: string; passed: boolean; detail?: unknown }> = [];
+function childEnv(): Record<string, string> {
+  // StdioClientTransport only forwards a safe subset by default; the server needs the
+  // caller's EDA environment (VERDI_HOME, DISPLAY, XAUTHORITY, LD_LIBRARY_PATH, ...).
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === "string") env[key] = value;
+  }
+  return env;
+}
+
 function check(name: string, passed: boolean, detail?: unknown): void {
   checks.push({ name, passed, detail });
   const line = `${passed ? "PASS" : "FAIL"} ${name}${detail === undefined ? "" : `: ${JSON.stringify(detail)}`}`;
@@ -25,8 +35,9 @@ const transport = new StdioClientTransport({
   args: ["run", "mcp/src/server.ts"],
   cwd: repoRoot,
   stderr: "pipe",
+    env: childEnv(),
 });
-const client = new Client({ name: "verdi-mcp-lifecycle", version: "0.1.0" });
+const client = new Client({ name: "verdimcp-lifecycle", version: "0.1.0" });
 await client.connect(transport);
 
 const envelope = (result: unknown): Record<string, unknown> => {

@@ -35,7 +35,7 @@ export interface ScreenshotResult {
 export type CapabilityStatus = "verified" | "documented" | "untested" | "not_implemented";
 
 export interface CapabilityMatrix {
-  verdi_home: string;
+  verdi_home: string | null;
   engines: { gui: boolean; npi: boolean };
   tools: Array<{ name: string; status: CapabilityStatus; notes?: string }>;
 }
