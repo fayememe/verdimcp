@@ -224,4 +224,4 @@ docs/       architecture、tools、skills、evidence、limits
 
 ## License
 
-还没定。在放 LICENSE 文件之前，请视为保留所有权利。如果你维护这个项目，MIT 和 Apache-2.0 都合适。
+MIT，见 [LICENSE](LICENSE)。

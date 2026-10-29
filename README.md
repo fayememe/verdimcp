@@ -245,5 +245,4 @@ before adding a tool.
 
 ## License
 
-Not chosen yet. Until a LICENSE file exists, treat this as all rights reserved. If you're maintaining it,
-MIT or Apache-2.0 both fit.
+MIT. See [LICENSE](LICENSE).
