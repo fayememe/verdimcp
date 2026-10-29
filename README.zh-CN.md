@@ -57,13 +57,13 @@ verdimcp 里没有任何协议名。handshake 类原语只认 role（valid / rea
 | <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
 | <img src="docs/evidence/demo/03-aes-subbytes16.png" width="430"> | <img src="docs/evidence/demo/04-aes-sbox-array.png" width="430"> |
 
-两张图来自同一次由 agent 自己编译、自己驱动的仿真：AES DOM 设计上的 `tb_subbytes16`，120 次
-SubBytes，5.6 us。它打开 FSDB，按设计结构挑了握手信号（`start_i` / `busy_o` / `done_o` / `en` / `ack`）、
-FSM 状态、128 位 data/mask 总线，以及每个 S-Box 的中间量。
+这里没有预设的信号列表。agent 先读设计，再判断当前要回答的问题（masked SubBytes 的握手对不对、
+DOM 的阶数要跑几拍），然后据此挑信号：握手线、FSM 状态、128 位 data/mask 总线，以及每个 S-Box 的
+中间量。视图也是同理挑的，仿真本身也是它自己编译、自己跑出来的。
 
-第一张是 0–1.5 us 的全景，大约十几次评估。第二张放大到第一次：FSM 走
-`S_IDLE → S_RUN → S_ACK → S_DONE`，`count_q` 沿 DOM 的阶数从 0 数到 4，marker 落在 125 ns，也就是
-`done_o` 第一次拉高的位置；之后是 235 ns 和 345 ns。
+第一张 0–1.5 us 是全貌，大约十几次评估。第二张放大到第一次，因为答案在那里：FSM 走
+`S_IDLE → S_RUN → S_ACK → S_DONE`，`count_q` 沿 DOM 阶数从 0 数到 4，marker 落在 125 ns，也就是
+`done_o` 第一个上升沿；之后是 235 ns 和 345 ns。
 
 ## 工具
 
