@@ -55,8 +55,7 @@ verdimcp 里没有任何协议名。handshake 类原语只认 role（valid / rea
 | | |
 |---|---|
 | <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
-| <img src="docs/evidence/demo/03-handshake.png" width="430"> | <img src="docs/evidence/demo/04-driver-cone.png" width="430"> |
-| <img src="docs/evidence/demo/05-x-cone.png" width="430"> | |
+| <img src="docs/evidence/demo/03-driver-cone.png" width="430"> | <img src="docs/evidence/demo/04-x-cone.png" width="430"> |
 
 ## 工具
 
