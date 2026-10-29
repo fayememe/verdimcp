@@ -65,9 +65,9 @@ last) and signal paths. Protocol rules are text in skills.
 
 | | |
 |---|---|
-| <img src="docs/evidence/demo/01-annotated-window.png" width="420"> | <img src="docs/evidence/demo/02-x-cone.png" width="420"> |
-| <img src="docs/evidence/demo/03-driver-cone.png" width="420"> | <img src="docs/evidence/demo/04-headless-render.png" width="420"> |
-| <img src="docs/evidence/demo/05-evidence-compare.png" width="420"> | |
+| <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
+| <img src="docs/evidence/demo/03-handshake.png" width="430"> | <img src="docs/evidence/demo/04-driver-cone.png" width="430"> |
+| <img src="docs/evidence/demo/05-x-cone.png" width="430"> | |
 
 ## Tools
 
