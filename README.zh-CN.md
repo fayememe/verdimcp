@@ -56,6 +56,7 @@ verdimcp 里没有任何协议名。handshake 类原语只认 role（valid / rea
 |---|---|
 | <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
 | <img src="docs/evidence/demo/03-aes-subbytes16.png" width="430"> | <img src="docs/evidence/demo/04-aes-sbox-array.png" width="430"> |
+
 两张图来自同一次由 agent 自己编译、自己驱动的仿真：AES DOM 设计上的 `tb_subbytes16`，120 次
 SubBytes，5.6 us。它打开 FSDB，按设计结构挑了握手信号（`start_i` / `busy_o` / `done_o` / `en` / `ack`）、
 FSM 状态、128 位 data/mask 总线，以及每个 S-Box 的中间量。

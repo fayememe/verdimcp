@@ -67,6 +67,7 @@ last) and signal paths. Protocol rules are text in skills.
 |---|---|
 | <img src="docs/evidence/demo/01-waveform.png" width="430"> | <img src="docs/evidence/demo/02-annotated.png" width="430"> |
 | <img src="docs/evidence/demo/03-aes-subbytes16.png" width="430"> | <img src="docs/evidence/demo/04-aes-sbox-array.png" width="430"> |
+
 Both views come from one run the agent built and drove: `tb_subbytes16` on the AES DOM design, 120
 SubBytes evaluations over 5.6 us. It opened the FSDB and picked the handshake (`start_i` / `busy_o` /
 `done_o` / `en` / `ack`), the FSM state, the 128-bit data and mask buses and the per-S-Box intermediates.
