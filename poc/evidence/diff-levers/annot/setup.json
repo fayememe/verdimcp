@@ -1,7 +1,0 @@
-{"type":"connect","ok":true,"port":11456}
-{"type":"result","ok":true,"command":"wvOpenFile -win 569d8a00 /home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb","result":"/home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb"}
-{"type":"event","cmd_index":0,"event":"wvOpenFSDBFile","data":"/home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb"}
-{"type":"event","cmd_index":0,"event":"wvViewRangeChanged","data":"0.000000 24240.000000"}
-{"type":"result","ok":false,"command":"wvAddSignal -win 569d8a00 /tb_sync_fifo/clk /tb_sync_fifo/rst_n /tb_sync_fifo/rd_data[7:0]","result":"invalid command name \"7:0\""}
-{"type":"result","ok":true,"command":"wvSetCursor -win 569d8a00 40000","result":"1"}
-{"type":"event","cmd_index":2,"event":"wvCursorTimeChange","data":"40000 {NULL} /home/faye/mydrv/aiwork/verdimcp/demo/sim/sync_fifo.fsdb"}

@@ -1,7 +1,0 @@
-PASS remote.handshake: {"connect_ms":294}
-PASS remote.tools_listed: {"count":37}
-PASS remote.has_capabilities
-PASS remote.has_session_start
-PASS remote.capabilities_ok: {"call_ms":5}
-PASS remote.gui_engine
-PASS remote.sessions_list_ok: {"count":1}

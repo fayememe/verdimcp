@@ -1,2 +1,0 @@
-{"type":"connect","ok":true,"port":11241}
-{"type":"result","ok":true,"command":"expr {333}","result":"333"}

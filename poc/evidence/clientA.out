@@ -1,4 +1,0 @@
-EVENT	wvCreateWindow	30f5d1b0
-EVENT	verdiMonoFontEvent	DejaVu Sans Mono,11
-ERR	wvCreateWindow	ERR_CURRENT_SOCKET_NOT_OPEN
-ERR	wvGetAllWindows	ERR_CURRENT_SOCKET_NOT_OPEN

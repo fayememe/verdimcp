@@ -1,2 +1,0 @@
-tb_sync_fifo.tb_sync_fifo(@1):Always0:45:45:Combo.O0
-tb_sync_fifo.tb_sync_fifo(@1):Init0:74:205:Init.O0

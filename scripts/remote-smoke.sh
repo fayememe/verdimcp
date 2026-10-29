@@ -13,9 +13,10 @@
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-EVID="$REPO_ROOT/poc/evidence/remote"
+EVID="$REPO_ROOT/evidence/remote"
 mkdir -p "$EVID"
-BUN="${BUN:-$(command -v bun || echo /home/faye/.bun/bin/bun)}"
+BUN="${BUN:-$(command -v bun || true)}"
+if [ -z "$BUN" ]; then echo "ERROR: bun not found on PATH (export BUN=/path/to/bun)" >&2; exit 1; fi
 
 SSH_DIR=/tmp/opencode/sshtest
 SSHD_PID=""
@@ -55,7 +56,7 @@ KbdInteractiveAuthentication no
 PermitRootLogin no
 AllowUsers $USER
 LogLevel ERROR
-AcceptEnv DISPLAY XAUTHORITY VERDI_HOME SNPSLMD_LICENSE_FILE LD_LIBRARY_PATH
+AcceptEnv DISPLAY XAUTHORITY VERDI_HOME LD_LIBRARY_PATH
 EOF
     /usr/sbin/sshd -f "$SSH_DIR/sshd_config" -E "$SSH_DIR/sshd.log"
     SSHD_PID=$(cat "$SSH_DIR/sshd.pid")

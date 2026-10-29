@@ -3,19 +3,18 @@
 #
 # Starts demo/writing/simv, samples the growing FSDB with the one-shot NPI worker,
 # and records what the reader sees (max_time, is_completed, change counts, errors).
-# Evidence: poc/evidence/writing-fsdb/
+# Evidence: evidence/writing-fsdb/
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-EVID="$REPO_ROOT/poc/evidence/writing-fsdb"
+EVID="$REPO_ROOT/evidence/writing-fsdb"
 mkdir -p "$EVID"
 
 CYCLES="${CYCLES:-15000000}"
 INTERVAL="${INTERVAL:-5}"
 SAMPLES="${SAMPLES:-8}"
 
-export VERDI_HOME="${VERDI_HOME:-/opt/synopsys/verdi/W-2024.09-SP1}"
-export SNPSLMD_LICENSE_FILE="${SNPSLMD_LICENSE_FILE:-27010@127.0.0.1}"
+: "${VERDI_HOME:?set VERDI_HOME and source your site EDA environment first}"
 export PYTHONPATH="$VERDI_HOME/share/NPI/python:${PYTHONPATH:-}"
 export LD_LIBRARY_PATH="$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib:${LD_LIBRARY_PATH:-}"
 

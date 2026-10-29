@@ -1,3 +1,0 @@
-session ec231cf1  port 11494  pid 3158820  display localhost:10.0
-label   kdb
-attach  verdi-session exec ec231cf1 'wvGetAllWindows'

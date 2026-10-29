@@ -1,5 +1,0 @@
-{"type":"connect","ok":true,"port":11724}
-{"type":"result","ok":true,"command":"info commands *rotocol*","result":"perSyncProtocolAnalyzer membNewProtocolAnalyzerWindow pabProtocolTree pabProtocolTreeExpandAll pabProtocolTreeExtBrowser pabProtocolTreeCollapseAll"}
-{"type":"result","ok":true,"command":"info commands *ransaction*","result":"pabClearAllMarkedTransactions pabShowInTransactionTableView wvGetSelectedTransactionId wvClearMarkedTransactions wvFilterTransactions pabDetailTransactionInfo tbarGotoTransactionStart wvViewMarkedTransactions pabRunToTransactionEnd tbarViewAllTransactions kdbDumpTransaction pabOpenAssoTransaction tbarViewAllTransactionsInWaveWnd uvmSeqWinShowSeqInTransactionPane wvMarkTransaction wvTransactionStreamIsVisible wvLogTransactionDetails pabMarkUnMarkTransaction wvColorizeTransactions wvSelectTransaction pabRunToTransactionStart wvExpandShrinkTransaction wvGetRelatedTransactionIdList pabNWMarkTransaction membSelectCacheTransaction"}
-{"type":"result","ok":true,"command":"info commands *APB*","result":""}
-{"type":"result","ok":true,"command":"info commands *AXI*","result":""}

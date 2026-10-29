@@ -1,19 +1,20 @@
 #!/bin/bash
-# M1–M5 end-to-end acceptance on f29.
+# End-to-end acceptance: starts its own Verdi session, runs the MCP test suite,
+# captures evidence, and stops only the session it started.
 # Starts its own Verdi session (label: acceptance), runs the MCP smoke test,
 # captures evidence, and stops only that session.
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-EVID="$REPO_ROOT/poc/evidence/m1-m5"
+EVID="$REPO_ROOT/evidence/m1-m5"
 mkdir -p "$EVID"
 
-export DISPLAY="${DISPLAY:-localhost:10.0}"
+: "${VERDI_HOME:?set VERDI_HOME and source your site EDA environment first}"
+: "${DISPLAY:?no DISPLAY: the acceptance run opens a real Verdi GUI}"
 export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
-export VERDI_HOME="${VERDI_HOME:-/opt/synopsys/verdi/W-2024.09-SP1}"
-export SNPSLMD_LICENSE_FILE="${SNPSLMD_LICENSE_FILE:-27010@127.0.0.1}"
 
-BUN="${BUN:-$(command -v bun || echo /home/faye/.bun/bin/bun)}"
+BUN="${BUN:-$(command -v bun || true)}"
+if [ -z "$BUN" ]; then echo "ERROR: bun not found on PATH (export BUN=/path/to/bun)" >&2; exit 1; fi
 CLI="${VERDI_SESSION_BIN:-$HOME/.local/bin/verdi-session}"
 
 if [ ! -x "$CLI" ]; then

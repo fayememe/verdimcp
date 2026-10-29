@@ -1,8 +1,0 @@
-{"type":"connect","ok":true,"port":11494}
-{"type":"event","cmd_index":0,"event":"wvCreateWindow","data":"4da0f290"}
-{"type":"event","cmd_index":0,"event":"verdiMonoFontEvent","data":"DejaVu Sans Mono,11"}
-{"type":"event","cmd_index":0,"event":"debMidBtnDown","data":"nTrace"}
-{"type":"event","cmd_index":0,"event":"debDndSrc","data":"nTrace"}
-{"type":"result","ok":true,"command":"schCreateWindow -delim . -scope {tb_sync_fifo}","result":"4d2544a0"}
-{"type":"event","cmd_index":0,"event":"schCreateWindow","data":"4d2544a0"}
-{"type":"event","cmd_index":0,"event":"schChangeScope","data":"4d2544a0 tb_sync_fifo"}

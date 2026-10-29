@@ -2,7 +2,7 @@
 """Generate a long-running testbench that writes an FSDB while it simulates.
 
 Used by scripts/writing-fsdb.sh to test NPI reads against an FSDB that is still
-being written (the "live FSDB" gap in md/04-npi-research.md).
+being written (see docs/architecture.md, "FSDB completeness").
 """
 
 N = 6

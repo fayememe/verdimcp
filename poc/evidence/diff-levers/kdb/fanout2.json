@@ -1,3 +1,0 @@
-{"type":"connect","ok":true,"port":11494}
-{"type":"result","ok":true,"command":"schTraceLoad -win 4d2544a0 -delim . -signal {tb_sync_fifo.clk}","result":"{tb_sync_fifo} {tb_sync_fifo(@1):Always0:45:45:Combo}"}
-{"type":"result","ok":true,"command":"schDumpTracedLeafPin -delim .","result":"1"}

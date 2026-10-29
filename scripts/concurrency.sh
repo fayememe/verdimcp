@@ -12,7 +12,7 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CLI="${VERDI_SESSION_BIN:-$HOME/.local/bin/verdi-session}"
-OUT="$REPO_ROOT/poc/evidence/concurrency"
+OUT="$REPO_ROOT/evidence/concurrency"
 mkdir -p "$OUT"
 
 WORKERS="${WORKERS:-4}"

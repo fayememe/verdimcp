@@ -1,3 +1,0 @@
-{"type":"connect","ok":true,"port":11494}
-{"type":"result","ok":true,"command":"srcGetCaretFile -win 4921c7a0","result":"/home/faye/mydrv/aiwork/verdimcp/demo/tb/tb_sync_fifo.v"}
-{"type":"result","ok":true,"command":"srcGetCaretLine -win 4921c7a0","result":"6"}

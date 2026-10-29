@@ -1,5 +1,5 @@
 // Synchronous FIFO with valid/ready handshakes.
-// Demo DUT for Verdi MCP waveform tests.
+// Demo DUT for verdimcp waveform tests.
 `timescale 1ns/1ps
 
 module sync_fifo #(

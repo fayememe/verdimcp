@@ -11,8 +11,13 @@ if [ ! -r "$FSDB" ]; then
     exit 1
 fi
 
+if [ -z "${VERDI_HOME:-}" ]; then
+    echo "ERROR: VERDI_HOME is not set (source your site EDA environment first)" >&2
+    exit 1
+fi
+
 cd "$HERE"
-exec "$ROOT/demo/sim/synenv.sh" bash -c '
+exec bash -c '
     export PYTHONPATH="$VERDI_HOME/share/NPI/python:${PYTHONPATH:-}"
     export LD_LIBRARY_PATH="$VERDI_HOME/share/NPI/lib/linux64:$VERDI_HOME/platform/linux64/lib/Qt5/lib:${LD_LIBRARY_PATH:-}"
     exec python3 "$1" "$2"

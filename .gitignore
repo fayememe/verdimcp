@@ -1,29 +1,36 @@
-# secrets / local env
+# local environment and secrets
 .env
 .env.*
 !.env.example
 
-# agent local state (progress.md + md/ are the durable record)
+# agent / editor local state
 .omo/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
 
-# runtime logs / session state
-*.log
-!poc/evidence/*.log
-!poc/evidence/m1-m5/*.log
-!demo/evidence/*.log
-npiLog/
-verdiLog/
+# runtime state written by the tools
 verdi-sessions/
+verdiLog/
+npiLog/
 artifacts/
+/evidence/
+*.log
+!docs/**/*.log
 
 # builds
-poc/cmdclient
 bin/cmdclient
 node_modules/
 dist/
 build/
 coverage/
 .bun/
+__pycache__/
+*.py[cod]
+.venv/
 
 # demo simulation outputs
 demo/sim/simv*
@@ -34,21 +41,6 @@ demo/sim/ucli.key
 demo/sim/novas.conf
 demo/sim/novas.rc
 demo/sim/verdiLog/
-
-# python
-__pycache__/
-*.py[cod]
-.venv/
-
-# OS / editor
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-.idea/
-.vscode/
-
-# live-FSDB test (demo/writing) build + sim outputs
 demo/writing/simv*
 demo/writing/csrc/
 demo/writing/*.fsdb
@@ -58,8 +50,6 @@ demo/writing/ucli.key
 demo/writing/novas*
 demo/writing/verdiLog/
 demo/writing/npiLog/
-
-# big synthetic FSDB generator outputs
 demo/bigfsdb/*.fsdb
 demo/bigfsdb/simv*
 demo/bigfsdb/csrc/
@@ -69,8 +59,3 @@ demo/bigfsdb/ucli.key
 demo/bigfsdb/novas.conf
 demo/bigfsdb/novas.rc
 demo/bigfsdb/verdiLog/
-
-# diff-levers evidence logs
-!poc/evidence/diff-levers/**/*.log
-!poc/evidence/lifecycle/*.log
-!poc/evidence/remote/*.log

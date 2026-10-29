@@ -1,69 +1,114 @@
-# AGENTS.md — verdimcp
+# AGENTS.md — project constitution
 
-> 本文件是本仓库的 **项目宪法（constitution）**。任何 agent / 协作者在动手前必须先读它，再读 `md/` 下的设计文档。
-> 若本文件与 `md/` 文档冲突，以 `md/` 中**已标记为「已定稿（frozen）」**的设计文档为准，并回填本文件。
->
-> 远程仓库：`https://git.softkitty.me/faye/verdimcp`（homelab Forgejo，**private**）。
->
-> 项目：**Verdi MCP** — 让 AI agent 通过 MCP 观察并操作正在运行的 Verdi/nWave 会话（目标宿主 f29，Verdi W-2024.09-SP1）。不替换 Verdi GUI，不把 RTL/FSDB 传到外部服务。背景见 `md/README.md`。
+> This file outranks your instincts. It applies to humans and AI agents equally.
+> If it conflicts with `docs/`, the frozen design document wins and this file gets fixed.
 
----
+## 0. A session is disposable, the document is not
 
-## 0. 工作原则：会话是一次性的，文档是持久的 ★
+Every working session may be interrupted and never resumed. Anything that exists only in a conversation is
+lost. Therefore:
 
-> 这是本仓库最高优先级的工作纪律。**每次 session 都默认「随时可能中断、且不会再继续」**。
+- **Write as you go.** Each decision, finding or dead end goes into `docs/` the moment it is settled.
+- Assume the next contributor knows nothing about your conversation. They can read the repo; make that
+  enough.
+- Leave an open question in the docs rather than in your head.
 
-### 0.1 第一原则
+## 1. The docs are the source of truth
 
-- 每一次 agent chat session 都**随时可能中断、且不会再继续**。只存在于对话里的结论 = 丢失。
-- 因此：**结论必须「边走边写（on the go）」进 `md/` / `progress.md`**，不要攒到最后。
-- 每完成一个决策 / 发现 / 讨论，**立刻**更新对应文档。
-- **默认下一个 session 对本对话一无所知**——它只能读到本文件与仓库里的文档。据此保证文档**自洽、可独立接手**。
+Code implements the docs, not the other way around.
 
-### 0.2 `progress.md` 是推进的唯一基准 ★
+1. Change `docs/` first (or the tool description, which is the public contract).
+2. Get it reviewed.
+3. Then change code.
 
-- **从此刻起，所有推进以根目录 `progress.md` 为准**，随时更新。
-- 内容固定五段：**当前状态** / **研发计划（checklist：TODO + 打勾，不讲细节）** / **pending issues / blocker** / **NEXT（下一步）** / **本 session 交接**。
-- 下个 session 只读 `progress.md` + `md/README.md` 即可接手。
+When behaviour changes, the doc changes in the same commit.
 
-### 0.3 结束 session 前的 checklist（或任何时候可能被中断前）
+## 2. Evidence discipline
 
-1. 新决策已进对应 `md/` 文档（含决策台账，若适用）；
-2. 开放问题 / 待办已写进文档；
-3. `md/README.md` 的「当前状态 / 交接」是最新的；
-4. `progress.md` 的 checklist / pending / NEXT / 交接 是最新的；
-5. 记清 session 状态后，即可**回收 session**。
+Every claim in a doc, a report or a commit message carries one of:
 
-### 0.4 文档先行
+| Label | Means |
+|---|---|
+| `VERIFIED` | actually executed on a real installation and observed |
+| `INFERRED` | reasoned from evidence, not directly observed |
+| `DOCUMENTED_ONLY` | a document says so; nobody ran it |
+| `NOT_TESTED` | nobody ran it and no document claims it |
 
-- **`md/` 是权威来源**。代码是文档的实现，不是反过来。改了行为要同步改文档。
-- 先改 `md/` → 评审通过 → 再落代码。
+Rules:
 
----
+- Never upgrade a label without a new observation.
+- A negative result is a result. Record it — the next person will otherwise spend a day rediscovering it.
+- A screenshot is VERIFIED evidence about pixels and INFERRED evidence about logic.
+- If a tool returned `not_supported`, write that. Do not paraphrase it into a result.
 
-## 5. 编码与协作规范
+## 3. Hard rules
 
-### 5.1 硬约束
+- **No type/error suppression.** No `as any`, `@ts-ignore`, `@ts-expect-error`, `# type: ignore`.
+- **No silent failure.** No empty `catch`, no `except: pass`. Log it and degrade explicitly, or fail loudly.
+- **No secrets in the repo.** No license strings, tokens, hostnames, site paths or personal data. Config
+  comes from the environment; the repo ships none.
+- **No credentials on disk.** Login and 2FA are done by a human, always.
+- **Never bypass access control.** No license circumvention, no auth bypass, no captcha automation.
+- **Own sessions only.** Operate only on sessions in this user's registry whose cmdline contains a matching
+  `-serverPort`. Never attach to, modify or kill another user's Verdi. On a shared host, an engineer may be
+  using that GUI right now.
+- **Read-only by default.** GUI-mutating tools must be separate tools so the caller sees the side effect.
+  Raw Tcl stays disabled unless `VERDI_ALLOW_RAW=1`, and every command is audited.
+- **Destructive git operations require an explicit request.** No force-push, no history rewrite, no branch
+  deletion.
 
-- **禁止** 用 `as any` / `@ts-ignore` / `# type: ignore` 等抑制类型/错误检查。
-- **禁止** 空 `except` / 静默吞异常（至少 log + 明确降级行为）。
-- 隐私：任何真实 API key / token / 个人数据**绝不入库**，走 `.env`（已在 `.gitignore`）。
-- **登录凭据（密码 / 挑战码）绝不落盘、绝不写入任何文件或提交**；需要的登录由人工完成。
-- **禁止** 自动化 / 绕过任何访问控制（license、认证、验证码）。
-- ★ **只操作自己的 Verdi 会话**：仅可控制本项目注册表（`~/.local/state/verdi-sessions/`）中由自己启动、且 cmdline 含匹配 `-serverPort` 的进程；**禁止** attach、修改或杀死其他用户的会话。
-- ★ **f29 上的 Verdi 可能正被工程师使用：默认只读观测**。改变 GUI 状态（开窗、加信号、移游标、关会话）前先确认目标会话与影响；禁止压测、批量请求或破坏性动作。
-- 破坏性操作（`force-push`、改历史、删分支/仓库）需**明确要求**后才可执行。
+## 4. No protocol semantics in the server
 
-### 5.2 工作方式
+`mcp/` must contain no `AXI`, `APB`, `AHB`, `Wishbone` or any other protocol string. Primitives take
+*roles* (`valid`, `ready`, `data`) and *paths*. Rules live in `skills/`.
 
-- **边走边写**（见 §0）：决策一旦形成就落文档。
-- **维护 `progress.md`**（见 §0 ★）：随时更新，收工前记清 session 状态。
-- **文档先行**：先改 `md/`，评审通过，再落代码。
-- **小步提交**：一个逻辑单元一次提交；提交信息说明「做了什么 + 为什么」。
-- 每次改动后：跑 lint / 测试 / 类型检查（若已建立），并给出证据。
+This is not style. It is what keeps the protocol library unbounded and the server small.
 
----
+## 5. Adding a tool
 
-## 6. 参考
+A new tool is justified only when **no existing tool plus a skill** can express the question.
 
-- **homelab git 服务**：`https://git.softkitty.me`（Forgejo，private 仓库）；凭据走 `git credential.helper`，不写进 remote URL。
+1. Probe the underlying Verdi command first. Record the result in `docs/limits.md`, including negatives.
+2. Write the contract: input shape, output shape, error codes, engine behaviour if it has one.
+3. Implement it with the existing patterns (`runTool`, `AppError`, provenance blocks).
+4. Add acceptance checks — including one asserting the negative behaviour if the command is unreliable.
+5. Update `docs/tools.md`.
+
+Do not add a tool that only renames an existing one. Do not add a tool for a protocol.
+
+## 6. Adding a skill
+
+1. Decide whether it is a new *decision* or a paragraph in an existing skill.
+2. It needs: scope (in/out), call order, degradation, a "do not" section, and the evidence label rule.
+3. If it only lists tools, it is documentation, not a skill.
+
+## 7. Code
+
+- Bun + TypeScript for the server; Python for the NPI worker; POSIX shell for scripts.
+- Match the existing structure: `mcp/src/tools/<area>.ts`, one `register*` per area.
+- Errors are `AppError(code, message, details)`. Use the existing codes; do not invent one per tool.
+- Time is `{value, unit}` and converted explicitly. Never assume a unit.
+- Everything a caller can observe must be in the response — including which engine ran and whether the
+  FSDB was complete.
+
+## 8. Verification before you call it done
+
+| Change | Required evidence |
+|---|---|
+| TypeScript edit | `cd mcp && bun x tsc --noEmit` clean |
+| Tool behaviour | acceptance check that fails without the change |
+| Docs only | every claim traceable to a tool call or a recorded probe |
+| Anything touching the GUI | `bash scripts/acceptance.sh` passes (it opens a real window — say so first) |
+
+Never report success from a build log alone. Run the thing.
+
+## 9. Commits
+
+Small and logical: one unit of behaviour or one unit of documentation. The message says what changed and
+why. Do not commit generated artifacts, logs, FSDBs or build output.
+
+## 10. Scope discipline
+
+If a capability belongs to another tool (log parsing, static lint, power, CDC, coverage, VCD/FST), do not
+build it here. Say what is missing and let the other tool do its job. The value of this project is that it
+does the Verdi part precisely, not that it does everything.

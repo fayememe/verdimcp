@@ -1,2 +1,0 @@
-{"type":"connect","ok":true,"port":11494}
-{"type":"result","ok":true,"command":"wvGetXWindowId -id 4d2544a0","result":"20003c1"}

@@ -63,7 +63,10 @@ def cmdclient_path():
 
 
 def verdi_home():
-    return os.environ.get("VERDI_HOME", "/opt/synopsys/verdi/W-2024.09-SP1")
+    home = os.environ.get("VERDI_HOME")
+    if not home:
+        sys.exit("error: VERDI_HOME is not set (export it, or source your site EDA env)")
+    return home
 
 
 def verdi_bin():
@@ -79,7 +82,6 @@ def verdi_bin():
 def build_env():
     env = dict(os.environ)
     env.setdefault("VERDI_HOME", verdi_home())
-    env.setdefault("SNPSLMD_LICENSE_FILE", "27010@127.0.0.1")
     lib = str(Path(verdi_home()) / "share/libcmd/linux64")
     env["LD_LIBRARY_PATH"] = lib + (":" + env["LD_LIBRARY_PATH"] if env.get("LD_LIBRARY_PATH") else "")
     env["PATH"] = str(Path(verdi_home()) / "bin") + ":" + env.get("PATH", "")

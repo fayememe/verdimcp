@@ -1,5 +1,0 @@
-EVENT	wvCreateWindow	4c71cc80
-EVENT	verdiMonoFontEvent	DejaVu Sans Mono,11
-OK	wvCreateWindow	4df3e780
-EVENT	wvCreateWindow	4df3e780
-OK	wvGetAllWindows	4c71cc80 4df3e780

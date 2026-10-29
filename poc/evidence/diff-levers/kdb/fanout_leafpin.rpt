@@ -1,3 +1,0 @@
-tb_sync_fifo.tb_sync_fifo(@1):Always0:45:45:Combo.I0
-tb_sync_fifo.dut.sync_fifo(@1):SigOp6:38:38:Combo.clk
-tb_sync_fifo.dut.sync_fifo(@1):SigOp8:38:38:ComboMemory_mem[0:3].CKR_clk
