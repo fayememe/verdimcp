@@ -50,6 +50,14 @@ signal 的变化计数、有界的 waveform render。批次跑、CI、以及任�
 verdimcp 里没有任何协议名。handshake 类原语只认 role（valid / ready / data / id / last）和 path，协议规则
 是 skill 里的文字。
 
+## 长什么样
+
+| | |
+|---|---|
+| <img src="docs/evidence/demo/01-annotated-window.png" width="420"> | <img src="docs/evidence/demo/02-x-cone.png" width="420"> |
+| <img src="docs/evidence/demo/03-driver-cone.png" width="420"> | <img src="docs/evidence/demo/04-headless-render.png" width="420"> |
+| <img src="docs/evidence/demo/05-evidence-compare.png" width="420"> | |
+
 ## 工具
 
 | 分类 | 工具 |
@@ -62,15 +70,6 @@ verdimcp 里没有任何协议名。handshake 类原语只认 role（valid / rea
 | 逃生口 | `tcl_exec`（默认关闭；设 `VERDI_ALLOW_RAW=1` 才启用，每条命令进 audit log） |
 
 输入输出和语义：[docs/tools.md](docs/tools.md)。
-
-下面两张图都是验收跑出来的：
-
-| t=0 的 X cone（`cone_capture mode=x`） | 无头 render（`waveform_render`） |
-|---|---|
-| <img src="docs/evidence/cone-x-trace.png" width="520"> | <img src="docs/evidence/waveform-render.png" width="520"> |
-
-两个都返回 path、大小和 sha256。cone 只能是图，因为 Verdi 不把 pin 导成文本；render 有上限，因为宽范围的
-无头视图比截图还慢。
 
 ## Skills
 

@@ -61,6 +61,14 @@ reason, plus an `fsdb` block carrying `max_time` and `is_completed`. Transitions
 There are no protocol names in verdimcp. The handshake primitives take roles (valid, ready, data, id,
 last) and signal paths. Protocol rules are text in skills.
 
+## What it looks like
+
+| | |
+|---|---|
+| <img src="docs/evidence/demo/01-annotated-window.png" width="420"> | <img src="docs/evidence/demo/02-x-cone.png" width="420"> |
+| <img src="docs/evidence/demo/03-driver-cone.png" width="420"> | <img src="docs/evidence/demo/04-headless-render.png" width="420"> |
+| <img src="docs/evidence/demo/05-evidence-compare.png" width="420"> | |
+
 ## Tools
 
 | Area | Tools |
@@ -73,15 +81,6 @@ last) and signal paths. Protocol rules are text in skills.
 | Escape hatch | `tcl_exec` (off unless `VERDI_ALLOW_RAW=1`, every command audited) |
 
 Inputs, outputs and semantics: [docs/tools.md](docs/tools.md).
-
-Two artifacts, both produced during the acceptance run:
-
-| X cone at t=0 (`cone_capture mode=x`) | Headless render (`waveform_render`) |
-|---|---|
-| <img src="docs/evidence/cone-x-trace.png" width="520"> | <img src="docs/evidence/waveform-render.png" width="520"> |
-
-Both return a path, a size and a sha256. The cone is a picture because Verdi doesn't expose its pins as
-text. The render is capped because a wide headless view is slower than a screenshot.
 
 ## Skills
 
